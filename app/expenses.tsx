@@ -9,9 +9,23 @@ export default function ExpensesScreen() {
         title="Expenses"
         subtitle="This will show your expenses list"
       />
-      <Text style={{ marginTop: 24, fontSize: 16, color: "gray" }}>
-        No expenses yet (this is just a placeholder)
-      </Text>
+      <Button
+        title="Add mock expense"
+        onPress={() => {
+          const newExpense: Expense = {
+            id: String(expenses.length + 1),
+            title: `Mock expense ${expenses.length + 1}`,
+            amount: 50,
+            date: "2026-01-10",
+          };
+          setExpenses([...expenses, newExpense]);
+        }}
+      />
+      <FlatList
+        data={expenses}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <ExpenseItem expense={item} />}
+      />
       <Link href="/">
         <Text style={{ color: "blue", marginTop: 16 }}>Back to home</Text>
       </Link>
