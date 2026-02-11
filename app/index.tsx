@@ -2,15 +2,15 @@ import { StyleSheet, View, Text } from "react-native";
 import { Link } from "expo-router";
 import WelcomeMessage from "@/src/components/WelcomeMessage";
 
-
 export default function Index() {
   return (
-    <View
-    style={styles.container}
-    >
-      <WelcomeMessage title="Welcome to the app" subtitle="This is the welcome message" />
+    <View style={styles.container}>
+      <WelcomeMessage
+        title="Welcome to the app"
+        subtitle="This is the welcome message"
+      />
       <Link href="/expenses">
-      <Text style={{ color: "blue", marginTop: 16 }}>Go to expenses</Text>
+        <Text style={{ color: "blue", marginTop: 16 }}>Go to expenses</Text>
       </Link>
     </View>
   );
