@@ -44,10 +44,12 @@ export default function AddExpenseScreen() {
     }
 
     const newExpense = {
-      id: Date.now().toString(), // Simple ID generation
+      id: Date.now().toString(),
       title: title.trim(),
       amount: Number(amount),
-      date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
+      date: formatDate(date),
+      category: category || undefined,
+      note: note.trim() || undefined,
     };
 
     setPendingExpense(newExpense);
