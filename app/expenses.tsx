@@ -93,7 +93,8 @@ export default function ExpensesScreen() {
         renderItem={({ item }) => (
           <ExpenseItem expense={item} onDelete={handleDelete} />
         )}
-        style={{ flex: 1 }}
+        style={{ flex: 1, paddingHorizontal: 0, width: "100%" }}
+        contentContainerStyle={{ paddingHorizontal: 32, width: "100%" }}
       />
       <Link href="/">
         <Text style={{ color: "blue", marginTop: 16 }}>Back to home</Text>

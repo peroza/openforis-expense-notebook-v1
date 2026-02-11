@@ -23,9 +23,19 @@ export default function ExpenseItem({ expense, onDelete }: ExpenseItemProps) {
     <Pressable onPress={handlePress} onLongPress={() => onDelete(expense.id)}>
       <View style={styles.card}>
         <View style={styles.content}>
-          <Text style={styles.title}>{expense.title}</Text>
+          <View style={styles.leftContent}>
+            <Text style={styles.title}>{expense.title}</Text>
+            {expense.category && (
+              <Text style={styles.category}>{expense.category}</Text>
+            )}
+          </View>
           <Text style={styles.amount}>{expense.amount} €</Text>
         </View>
+        {expense.note && (
+          <Text style={styles.note} numberOfLines={2}>
+            {expense.note}
+          </Text>
+        )}
         <Text style={styles.date}>{expense.date}</Text>
       </View>
     </Pressable>
@@ -36,7 +46,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     borderRadius: 8,
-    padding: 16,
+    padding: 8,
     marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -78,5 +88,19 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "600",
+  },
+  leftContent: {
+    flex: 1,
+  },
+  category: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginTop: 4,
+  },
+  note: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginTop: 8,
+    fontStyle: "italic",
   },
 });
