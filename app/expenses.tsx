@@ -3,11 +3,13 @@ import { Link } from "expo-router";
 import WelcomeMessage from "@/src/components/WelcomeMessage";
 import ExpenseItem from "@/src/components/ExpenseItem";
 import type Expense from "@/src/types/Expense";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFocusEffect } from "expo-router";
 import {
   getAndClearPendingExpense,
   getAndClearExpenseToUpdate,
+  getStoredExpenses,
+  saveExpenses,
 } from "@/src/utils/expenseStorage";
 
 const MOCK_EXPENSES: Expense[] = [
@@ -39,6 +41,30 @@ const MOCK_EXPENSES: Expense[] = [
 
 export default function ExpensesScreen() {
   const [expenses, setExpenses] = useState<Expense[]>(MOCK_EXPENSES);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load expenses from storage on mount
+  useEffect(() => {
+    const loadExpenses = async () => {
+      const stored = await getStoredExpenses();
+      if (stored.length === 0) {
+        // First time: use mock data
+        setExpenses(MOCK_EXPENSES);
+        await saveExpenses(MOCK_EXPENSES);
+      } else {
+        setExpenses(stored);
+      }
+      setIsLoading(false);
+    };
+    loadExpenses();
+  }, []);
+
+  // Save expenses to storage whenever they change
+  useEffect(() => {
+    if (!isLoading) {
+      saveExpenses(expenses);
+    }
+  }, [expenses, isLoading]);
 
   const handleDelete = (id: string) => {
     Alert.alert(
@@ -77,6 +103,14 @@ export default function ExpensesScreen() {
       }
     }, []),
   );
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Loading expenses...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
