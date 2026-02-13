@@ -12,8 +12,8 @@ import { Link } from "expo-router";
 import { useState } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { setPendingExpense } from "@/src/utils/expenseStorage";
 import { EXPENSE_CATEGORIES } from "@/src/constants/categories";
+import { useExpenses } from "@/src/context/ExpensesContext";
 
 export default function AddExpenseScreen() {
   const [title, setTitle] = useState("");
@@ -23,6 +23,7 @@ export default function AddExpenseScreen() {
   const [category, setCategory] = useState<string>("");
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [note, setNote] = useState("");
+  const { addExpense } = useExpenses();
 
   const router = useRouter();
 
@@ -37,22 +38,21 @@ export default function AddExpenseScreen() {
     return date.toISOString().split("T")[0]; // YYYY-MM-DD
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim() || !amount.trim()) {
       alert("Please fill in all fields");
       return;
     }
 
-    const newExpense = {
-      id: Date.now().toString(),
+    await addExpense({
       title: title.trim(),
       amount: Number(amount),
       date: formatDate(date),
       category: category || undefined,
       note: note.trim() || undefined,
-    };
+      paymentMethod: undefined,
+    });
 
-    setPendingExpense(newExpense);
     router.back();
   };
 

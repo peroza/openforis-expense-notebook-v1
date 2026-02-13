@@ -7,26 +7,44 @@ import {
   Pressable,
   Modal,
   ScrollView,
+  ScrollView as ScrollViewComponent,
 } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { setExpenseToUpdate } from "@/src/utils/expenseStorage";
+import { useRouter, useLocalSearchParams, Link } from "expo-router";
+import { useExpenses } from "@/src/context/ExpensesContext";
 import { EXPENSE_CATEGORIES } from "@/src/constants/categories";
-import type Expense from "@/src/types/Expense";
 
 export default function EditExpenseScreen() {
-  const params = useLocalSearchParams();
   const router = useRouter();
-  const expenseData = JSON.parse(params.expense as string) as Expense;
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const rawId = params.id;
+  const expenseId = Array.isArray(rawId) ? rawId[0] : rawId;
 
-  const [title, setTitle] = useState(expenseData.title);
-  const [amount, setAmount] = useState(expenseData.amount.toString());
-  const [date, setDate] = useState(new Date(expenseData.date));
+  const { getExpenseById, updateExpense } = useExpenses();
+
+  const expenseData = useMemo(
+    () => (expenseId ? getExpenseById(expenseId) : undefined),
+    [expenseId, getExpenseById],
+  );
+
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [category, setCategory] = useState<string>(expenseData.category || "");
+  const [category, setCategory] = useState<string>("");
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-  const [note, setNote] = useState(expenseData.note || "");
+  const [note, setNote] = useState("");
+
+  // Populate form fields when expenseData is loaded
+  useEffect(() => {
+    if (!expenseData) return;
+    setTitle(expenseData.title);
+    setAmount(expenseData.amount.toString());
+    setDate(new Date(expenseData.date));
+    setCategory(expenseData.category || "");
+    setNote(expenseData.note || "");
+  }, [expenseData]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
@@ -39,27 +57,46 @@ export default function EditExpenseScreen() {
     return date.toISOString().split("T")[0];
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim() || !amount.trim()) {
       alert("Please fill in all fields");
       return;
     }
 
-    const updatedExpense: Expense = {
-      ...expenseData, // Keep original id and date
+    if (!expenseData) {
+      alert("Expense not found");
+      return;
+    }
+
+    await updateExpense({
+      ...expenseData,
       title: title.trim(),
       amount: Number(amount),
       date: formatDate(date),
       category: category || undefined,
       note: note.trim() || undefined,
-    };
+    });
 
-    setExpenseToUpdate(updatedExpense);
     router.back();
   };
 
+  // Show loading/error state if expense not found
+  if (!expenseData) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Edit Expense</Text>
+        <Text style={{ marginBottom: 16, color: "#ef4444" }}>
+          Expense not found.
+        </Text>
+        <Link href="/expenses">
+          <Text style={{ color: "blue", marginTop: 16 }}>Back to expenses</Text>
+        </Link>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <ScrollViewComponent style={styles.container}>
       <Text style={styles.title}>Edit Expense</Text>
 
       <Text style={styles.label}>Title:</Text>
@@ -79,7 +116,7 @@ export default function EditExpenseScreen() {
         keyboardType="numeric"
       />
 
-      {/* Category picker - same as add-expense.tsx */}
+      {/* Category picker */}
       <Text style={styles.label}>Category:</Text>
       <Pressable
         onPress={() => setShowCategoryPicker(true)}
@@ -158,7 +195,7 @@ export default function EditExpenseScreen() {
       />
 
       <Button title="Save Changes" onPress={handleSave} />
-    </View>
+    </ScrollViewComponent>
   );
 }
 

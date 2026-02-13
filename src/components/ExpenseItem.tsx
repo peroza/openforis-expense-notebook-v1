@@ -13,9 +13,7 @@ export default function ExpenseItem({ expense, onDelete }: ExpenseItemProps) {
   const handlePress = () => {
     router.push({
       pathname: "/edit-expense",
-      params: {
-        expense: JSON.stringify(expense), // Pass as JSON string
-      },
+      params: { id: expense.id },
     });
   };
 
