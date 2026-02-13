@@ -57,128 +57,132 @@ export default function AddExpenseScreen() {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 24,
-      }}
-    >
-      <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
-        Add New Expense
-      </Text>
-
-      <Text style={{ alignSelf: "flex-start", marginBottom: 8 }}>Title:</Text>
-      <TextInput
+    <ScrollView style={{ flex: 1 }}>
+      <View
         style={{
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          width: "100%",
-          borderRadius: 8,
-          marginBottom: 16,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 24,
         }}
-        value={title}
-        onChangeText={setTitle}
-        placeholder="Enter expense title"
-      />
-      <Text style={{ alignSelf: "flex-start", marginBottom: 8 }}>Amount:</Text>
-      <TextInput
-        style={{
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          width: "100%",
-          borderRadius: 8,
-          marginBottom: 16,
-        }}
-        value={amount}
-        onChangeText={setAmount}
-        placeholder="Enter amount"
-        keyboardType="numeric"
-      />
-
-      <Text style={styles.label}>Category:</Text>
-      <Pressable
-        onPress={() => setShowCategoryPicker(true)}
-        style={styles.pickerButton}
       >
-        <Text>{category || "Select category"}</Text>
-      </Pressable>
+        <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
+          Add New Expense
+        </Text>
 
-      <Modal
-        visible={showCategoryPicker}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowCategoryPicker(false)}
-      >
+        <Text style={{ alignSelf: "flex-start", marginBottom: 8 }}>Title:</Text>
+        <TextInput
+          style={{
+            borderWidth: 1,
+            borderColor: "#ccc",
+            padding: 12,
+            width: "100%",
+            borderRadius: 8,
+            marginBottom: 16,
+          }}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Enter expense title"
+        />
+        <Text style={{ alignSelf: "flex-start", marginBottom: 8 }}>
+          Amount:
+        </Text>
+        <TextInput
+          style={{
+            borderWidth: 1,
+            borderColor: "#ccc",
+            padding: 12,
+            width: "100%",
+            borderRadius: 8,
+            marginBottom: 16,
+          }}
+          value={amount}
+          onChangeText={setAmount}
+          placeholder="Enter amount"
+          keyboardType="numeric"
+        />
+
+        <Text style={styles.label}>Category:</Text>
         <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setShowCategoryPicker(false)}
+          onPress={() => setShowCategoryPicker(true)}
+          style={styles.pickerButton}
+        >
+          <Text>{category || "Select category"}</Text>
+        </Pressable>
+
+        <Modal
+          visible={showCategoryPicker}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowCategoryPicker(false)}
         >
           <Pressable
-            style={styles.modalContent}
-            onPress={(e) => e.stopPropagation()}
+            style={styles.modalBackdrop}
+            onPress={() => setShowCategoryPicker(false)}
           >
-            <Text style={styles.modalTitle}>Select Category</Text>
-            <ScrollView style={styles.categoryList}>
-              {EXPENSE_CATEGORIES.map((cat) => (
-                <Pressable
-                  key={cat}
-                  onPress={() => {
-                    setCategory(cat);
-                    setShowCategoryPicker(false);
-                  }}
-                  style={[
-                    styles.categoryOption,
-                    category === cat && styles.categoryOptionSelected,
-                  ]}
-                >
-                  <Text
+            <Pressable
+              style={styles.modalContent}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <Text style={styles.modalTitle}>Select Category</Text>
+              <ScrollView style={styles.categoryList}>
+                {EXPENSE_CATEGORIES.map((cat) => (
+                  <Pressable
+                    key={cat}
+                    onPress={() => {
+                      setCategory(cat);
+                      setShowCategoryPicker(false);
+                    }}
                     style={[
-                      styles.categoryOptionText,
-                      category === cat && styles.categoryOptionTextSelected,
+                      styles.categoryOption,
+                      category === cat && styles.categoryOptionSelected,
                     ]}
                   >
-                    {cat}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
+                    <Text
+                      style={[
+                        styles.categoryOptionText,
+                        category === cat && styles.categoryOptionTextSelected,
+                      ]}
+                    >
+                      {cat}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </Pressable>
           </Pressable>
+        </Modal>
+
+        <Text style={styles.label}>Date:</Text>
+        <Pressable onPress={() => setShowDatePicker(true)}>
+          <Text style={styles.dateDisplay}>{formatDate(date)}</Text>
         </Pressable>
-      </Modal>
 
-      <Text style={styles.label}>Date:</Text>
-      <Pressable onPress={() => setShowDatePicker(true)}>
-        <Text style={styles.dateDisplay}>{formatDate(date)}</Text>
-      </Pressable>
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
 
-      {showDatePicker && (
-        <DateTimePicker
-          value={date}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
+        <Text style={styles.label}>Note (optional):</Text>
+        <TextInput
+          style={[styles.input, { height: 80, textAlignVertical: "top" }]}
+          value={note}
+          onChangeText={setNote}
+          placeholder="Add a note..."
+          multiline
+          numberOfLines={3}
         />
-      )}
 
-      <Text style={styles.label}>Note (optional):</Text>
-      <TextInput
-        style={[styles.input, { height: 80, textAlignVertical: "top" }]}
-        value={note}
-        onChangeText={setNote}
-        placeholder="Add a note..."
-        multiline
-        numberOfLines={3}
-      />
-
-      <Button title="Save Expense" onPress={handleSave} />
-      <Link href="/expenses">
-        <Text style={{ color: "blue", marginTop: 24 }}>Back to expenses</Text>
-      </Link>
-    </View>
+        <Button title="Save Expense" onPress={handleSave} />
+        <Link href="/expenses">
+          <Text style={{ color: "blue", marginTop: 24 }}>Back to expenses</Text>
+        </Link>
+      </View>
+    </ScrollView>
   );
 }
 
