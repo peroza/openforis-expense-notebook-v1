@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import type Expense from "@/src/types/Expense";
 import { AsyncStorageExpenseRepository } from "@/src/services/asyncStorageExpenseRepository";
+import { FirestoreExpenseRepository } from "@/src/services/firestoreExpenseRepository";
+import { db } from "@/src/config/firebase";
 
 type AddExpenseInput = Omit<Expense, "id">;
 
@@ -52,7 +54,12 @@ const MOCK_EXPENSES: Expense[] = [
 ];
 
 export function ExpensesProvider({ children }: { children: React.ReactNode }) {
-  const repository = useMemo(() => new AsyncStorageExpenseRepository(), []);
+  const repository = useMemo(() => {
+    if (db) {
+      return new FirestoreExpenseRepository();
+    }
+    return new AsyncStorageExpenseRepository();
+  }, []);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
