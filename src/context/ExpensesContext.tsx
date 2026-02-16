@@ -56,8 +56,12 @@ const MOCK_EXPENSES: Expense[] = [
 export function ExpensesProvider({ children }: { children: React.ReactNode }) {
   const repository = useMemo(() => {
     if (db) {
+      console.log("🔥 Using FirestoreExpenseRepository");
       return new FirestoreExpenseRepository();
     }
+    console.log(
+      "💾 Using AsyncStorageExpenseRepository (Firebase not configured)",
+    );
     return new AsyncStorageExpenseRepository();
   }, []);
   const [expenses, setExpenses] = useState<Expense[]>([]);

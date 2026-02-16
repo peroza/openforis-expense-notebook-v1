@@ -12,7 +12,11 @@ const firebaseConfig = {
 
 function getFirebaseApp(): FirebaseApp | null {
   if (getApps().length === 0) {
-    if (!firebaseConfig.projectId) return null;
+    if (!firebaseConfig.projectId) {
+      console.warn("⚠️ Firebase not configured: Missing projectId");
+      return null;
+    }
+    console.log("✅ Initializing Firebase with project:", firebaseConfig.projectId);
     return initializeApp(firebaseConfig);
   }
   return getApps()[0] as FirebaseApp;
@@ -20,3 +24,9 @@ function getFirebaseApp(): FirebaseApp | null {
 
 export const app = getFirebaseApp();
 export const db = app ? initializeFirestore(app, { localCache: persistentLocalCache() }) : null;
+
+if (db) {
+  console.log("✅ Firestore initialized successfully");
+} else {
+  console.warn("⚠️ Firestore not initialized - using AsyncStorage fallback");
+}
