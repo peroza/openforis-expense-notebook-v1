@@ -15,6 +15,11 @@ export default function Index() {
           <Text style={styles.expensesButtonText}>View Expenses →</Text>
         </View>
       </Link>
+      <Link href={"/debug" as any} style={styles.expensesLink}>
+        <View style={styles.expensesButton}>
+          <Text style={styles.expensesButton}>Debug →</Text>
+        </View>
+      </Link>
     </View>
   );
 }
