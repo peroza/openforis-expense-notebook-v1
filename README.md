@@ -1,50 +1,77 @@
-# Welcome to your Expo app 👋
+# Open Foris Expense Notebook
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile-first expense tracking notebook built with Expo and React Native for the Open Foris initiative. The app enables field teams and project staff to capture, review, and synchronize expenses in a simple, structured, and reliable way.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Offline-first expense capture**: Record expenses even with limited or no connectivity; data is synchronized when a connection is available.
+- **Structured expense metadata**: Store date, category, amount, description, and additional context needed for field reporting.
+- **Secure cloud storage**: Persist data using Firebase/Firestore (configurable for different environments).
+- **Simple review workflow**: Browse, filter, and edit existing expenses from a clean, mobile-friendly interface.
+- **Built with modern tooling**: Expo Router, React Context, and custom hooks for a maintainable, testable codebase.
+
+## Technology stack
+
+- **Runtime**: [Expo](https://expo.dev) / React Native
+- **Language**: TypeScript
+- **State & data**: React Context, custom hooks, Firestore-backed repository layer
+- **Tooling**: Expo Router, EAS, npm
+
+## Getting started
+
+1. **Install dependencies**
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. **Configure Firebase**
+
+   Create and populate your Firebase configuration in `src/config/firebase.ts` (or use environment-specific configuration as appropriate for your deployment).
+
+3. **Run the app**
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+   You can then open the app in:
+   - an iOS simulator,
+   - an Android emulator, or
+   - the Expo Go client.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+The most relevant directories are:
 
-## Get a fresh project
+- `app/` – Expo Router screens (e.g. `index`, `add-expense`, `expenses`)
+- `src/context/` – shared React contexts (e.g. `ExpensesContext`)
+- `src/hooks/` – reusable hooks (e.g. network status)
+- `src/services/` – data access and repository implementations (e.g. Firestore expense repository)
+- `src/config/` – configuration (e.g. Firebase)
 
-When you're ready, run:
+## Development
 
-```bash
-npm run reset-project
-```
+- **Start development server**
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+  ```bash
+  npx expo start
+  ```
 
-## Learn more
+- **Reset to a clean starter (optional)**
 
-To learn more about developing your project with Expo, look at the following resources:
+  ```bash
+  npm run reset-project
+  ```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Contributing
 
-## Join the community
+Contributions are welcome. Please:
 
-Join our community of developers creating universal apps.
+1. Open an issue describing the proposed change or bug.
+2. Fork the repository and create a feature branch.
+3. Submit a pull request with a clear description and, where relevant, screenshots or notes about testing.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## License
+
+This project is released under the [MIT License](LICENSE) (or update to the appropriate license for the Open Foris ecosystem).
