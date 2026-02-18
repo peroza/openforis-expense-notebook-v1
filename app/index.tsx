@@ -15,7 +15,7 @@ export default function Index() {
           <Text style={styles.expensesButtonText}>View Expenses →</Text>
         </View>
       </Link>
-      <Link href={"/debug" as any} style={styles.expensesLink}>
+      <Link href="/debug" style={styles.expensesLink}>
         <View style={styles.expensesButton}>
           <Text style={styles.expensesButton}>Debug →</Text>
         </View>
@@ -57,9 +57,3 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 });
-
-// style={{
-//   flex: 1,
-//   justifyContent: "center",
-//   alignItems: "center",
-// }}

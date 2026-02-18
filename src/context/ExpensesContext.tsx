@@ -4,6 +4,8 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useCallback,
+  useRef,
 } from "react";
 import type Expense from "@/src/types/Expense";
 import { AsyncStorageExpenseRepository } from "@/src/services/asyncStorageExpenseRepository";
@@ -15,6 +17,7 @@ type AddExpenseInput = Omit<Expense, "id">;
 type ExpensesContextValue = {
   expenses: Expense[];
   isLoading: boolean;
+  isSyncing: boolean;
   refresh: () => Promise<void>;
   addExpense: (input: AddExpenseInput) => Promise<void>;
   updateExpense: (expense: Expense) => Promise<void>;
@@ -66,53 +69,88 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const isSyncingRef = useRef(false); // Use ref to track syncing state
 
-  const refresh = async () => {
-    const list = await repository.list();
-    setExpenses(list);
-  };
+  const refresh = useCallback(async () => {
+    // Check ref instead of state to avoid dependency issues
+    if (isSyncingRef.current) {
+      console.log("⏸️ Refresh skipped - already syncing");
+      return;
+    }
+    isSyncingRef.current = true;
+    setIsSyncing(true);
+    try {
+      console.log("🔄 Starting refresh...");
+      const list = await repository.list();
+      setExpenses(list);
+      console.log("✅ Refresh completed");
+    } catch (error) {
+      console.error("❌ Error refreshing expenses:", error);
+    } finally {
+      isSyncingRef.current = false;
+      setIsSyncing(false);
+    }
+  }, [repository]); // Remove isSyncing from dependencies!
 
   useEffect(() => {
     const bootstrap = async () => {
       setIsLoading(true);
-      const list = await repository.list();
+      try {
+        const list = await repository.list();
 
-      if (list.length === 0) {
-        await repository.replaceAll(MOCK_EXPENSES);
-        setExpenses(MOCK_EXPENSES);
-      } else {
-        setExpenses(list);
+        if (list.length === 0) {
+          await repository.replaceAll(MOCK_EXPENSES);
+          setExpenses(MOCK_EXPENSES);
+        } else {
+          setExpenses(list);
+        }
+      } catch (error) {
+        console.error("Error bootstrapping expenses:", error);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
     void bootstrap();
   }, [repository]);
 
-  const addExpense = async (input: AddExpenseInput) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await repository.create({ id, ...input });
-    await refresh();
-  };
+  const addExpense = useCallback(
+    async (input: AddExpenseInput) => {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      await repository.create({ id, ...input });
+      await refresh();
+    },
+    [repository, refresh],
+  );
 
-  const updateExpense = async (expense: Expense) => {
-    await repository.update(expense);
-    await refresh();
-  };
+  const updateExpense = useCallback(
+    async (expense: Expense) => {
+      await repository.update(expense);
+      await refresh();
+    },
+    [repository, refresh],
+  );
 
-  const deleteExpense = async (id: string) => {
-    await repository.remove(id);
-    await refresh();
-  };
+  const deleteExpense = useCallback(
+    async (id: string) => {
+      await repository.remove(id);
+      await refresh();
+    },
+    [repository, refresh],
+  );
 
-  const getExpenseById = (id: string) => expenses.find((e) => e.id === id);
+  const getExpenseById = useCallback(
+    (id: string) => expenses.find((e) => e.id === id),
+    [expenses],
+  );
 
   return (
     <ExpensesContext.Provider
       value={{
         expenses,
         isLoading,
+        isSyncing,
         refresh,
         addExpense,
         updateExpense,

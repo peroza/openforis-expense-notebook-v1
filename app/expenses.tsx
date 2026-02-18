@@ -1,19 +1,13 @@
-import { View, Text, FlatList, Alert } from "react-native";
-import { Link, useFocusEffect } from "expo-router";
+import { View, Text, FlatList, Alert, RefreshControl } from "react-native";
+import { Link } from "expo-router";
 import WelcomeMessage from "@/src/components/WelcomeMessage";
 import ExpenseItem from "@/src/components/ExpenseItem";
 import ExpenseSummary from "@/src/components/ExpenseSummary";
 import { useExpenses } from "@/src/context/ExpensesContext";
-import { useCallback } from "react";
 
 export default function ExpensesScreen() {
-  const { expenses, isLoading, deleteExpense, refresh } = useExpenses();
-
-  useFocusEffect(
-    useCallback(() => {
-      void refresh();
-    }, [refresh]),
-  );
+  const { expenses, isLoading, isSyncing, deleteExpense, refresh } =
+    useExpenses();
 
   const handleDelete = (id: string) => {
     Alert.alert(
@@ -44,6 +38,22 @@ export default function ExpensesScreen() {
         title="Expenses"
         subtitle="This will show your expenses list"
       />
+
+      {/* Sync Status Indicator */}
+      {isSyncing && (
+        <View
+          style={{
+            backgroundColor: "#dbeafe",
+            padding: 8,
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: "#2563eb", fontSize: 12 }}>
+            Syncing with server...
+          </Text>
+        </View>
+      )}
+
       <Link href="/add-expense">
         <Text style={{ color: "blue", marginTop: 16, marginHorizontal: 32 }}>
           Add New Expense
@@ -60,6 +70,14 @@ export default function ExpensesScreen() {
         )}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 16 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isSyncing}
+            onRefresh={() => void refresh()}
+            tintColor="#2563eb"
+            colors={["#2563eb"]}
+          />
+        }
         ListEmptyComponent={
           <View style={{ padding: 32, alignItems: "center" }}>
             <Text style={{ color: "#6b7280", fontSize: 16 }}>
