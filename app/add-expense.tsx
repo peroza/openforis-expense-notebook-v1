@@ -44,15 +44,30 @@ export default function AddExpenseScreen() {
       return;
     }
 
-    await addExpense({
+    // Build expense object, only including fields that have values
+    const expenseData: {
+      title: string;
+      amount: number;
+      date: string;
+      category?: string;
+      note?: string;
+      paymentMethod?: string;
+    } = {
       title: title.trim(),
       amount: Number(amount),
       date: formatDate(date),
-      category: category || undefined,
-      note: note.trim() || undefined,
-      paymentMethod: undefined,
-    });
+    };
 
+    // Only add optional fields if they have values
+    if (category.trim()) {
+      expenseData.category = category.trim();
+    }
+    if (note.trim()) {
+      expenseData.note = note.trim();
+    }
+    // paymentMethod and the other fields can be added later when we implement that field
+
+    await addExpense(expenseData);
     router.back();
   };
 
