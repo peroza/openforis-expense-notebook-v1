@@ -18,6 +18,29 @@ import {
     if (!db) throw new Error("Firestore is not initialized. Check Firebase config.");
     return collection(db, COLLECTION);
   }
+
+    // Helper function to convert Firestore Timestamp to YYYY-MM-DD string
+    function convertTimestampToString(date: any): string {
+      if (!date) return new Date().toISOString().split("T")[0];
+      
+      // If it's already a string, return it
+      if (typeof date === "string") return date;
+      
+      // If it's a Firestore Timestamp, convert it
+      if (date && typeof date === "object" && "seconds" in date) {
+        const timestamp = date as Timestamp;
+        const dateObj = timestamp.toDate();
+        return dateObj.toISOString().split("T")[0];
+      }
+      
+      // Fallback: try to parse as Date
+      try {
+        const dateObj = date instanceof Date ? date : new Date(date);
+        return dateObj.toISOString().split("T")[0];
+      } catch {
+        return new Date().toISOString().split("T")[0];
+      }
+    }
   
   export class FirestoreExpenseRepository implements ExpenseRepository {
     async list(): Promise<Expense[]> {
@@ -28,7 +51,14 @@ import {
       try {
         console.log("📖 Fetching expenses from Firestore...");
         const snap = await getDocs(query(getCollection(), orderBy("date", "desc")));
-        const expenses = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense));
+        const expenses = snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            ...data,
+            date: convertTimestampToString(data.date),
+          } as Expense;
+        });
         console.log(`✅ Loaded ${expenses.length} expenses from Firestore`);
         return expenses;
       } catch (error: any) {
@@ -37,7 +67,14 @@ import {
         if (error.code === "failed-precondition") {
           console.log("⚠️ Index missing, fetching without orderBy...");
           const snap = await getDocs(getCollection());
-          return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense));
+          return snap.docs.map((d) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              ...data,
+              date: convertTimestampToString(data.date),
+            } as Expense;
+          });
         }
         throw error;
       }
