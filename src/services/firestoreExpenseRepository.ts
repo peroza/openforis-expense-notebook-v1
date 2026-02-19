@@ -7,90 +7,203 @@ import {
   writeBatch,
   query,
   orderBy,
+  type QueryDocumentSnapshot,
 } from "firebase/firestore";
 import type Expense from "@/src/types/Expense";
 import type { ExpenseRepository } from "@/src/services/expenseRepository";
 import { db } from "@/src/config/firebase";
+import {
+  FirestoreError,
+  FirestoreNotInitializedError,
+  ValidationError,
+} from "@/src/services/errors";
 
 const COLLECTION = "expenses";
 
+// Log message constants
+const LOG_MESSAGES = {
+  FETCHING: "📖 Fetching expenses from Firestore...",
+  LOADED: (count: number) => `✅ Loaded ${count} expenses from Firestore`,
+  ERROR_FETCHING: "❌ Error fetching expenses from Firestore",
+  INDEX_MISSING: "⚠️ Index missing, fetching without orderBy...",
+  REPLACING: (count: number) =>
+    `💾 Replacing all expenses in Firestore (${count} items)...`,
+  REPLACED: "✅ Successfully replaced all expenses in Firestore",
+  ERROR_REPLACING: "❌ Error replacing expenses",
+  CREATING: (title: string) => `➕ Creating expense in Firestore: ${title}`,
+  CREATED: "✅ Expense created successfully",
+  ERROR_CREATING: "❌ Error creating expense",
+  UPDATING: (id: string) => `✏️ Updating expense in Firestore: ${id}`,
+  UPDATED: "✅ Expense updated successfully",
+  ERROR_UPDATING: "❌ Error updating expense",
+  DELETING: (id: string) => `🗑️ Deleting expense from Firestore: ${id}`,
+  DELETED: "✅ Expense deleted successfully",
+  ERROR_DELETING: "❌ Error deleting expense",
+} as const;
+
 function getCollection() {
-  if (!db) throw new Error("Firestore is not initialized. Check Firebase config.");
+  if (!db) {
+    throw new FirestoreNotInitializedError();
+  }
   return collection(db, COLLECTION);
 }
 
+// Type guard for Firestore Timestamp
+function isFirestoreTimestamp(
+  value: unknown
+): value is { seconds: number; nanoseconds: number } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "seconds" in value &&
+    "nanoseconds" in value &&
+    typeof (value as { seconds: unknown }).seconds === "number" &&
+    typeof (value as { nanoseconds: unknown }).nanoseconds === "number"
+  );
+}
+
 // Helper function to remove undefined values from an object
-function removeUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
+function removeUndefined<T extends Record<string, unknown>>(
+  obj: T
+): Partial<T> {
   return Object.fromEntries(
     Object.entries(obj).filter(([_, value]) => value !== undefined)
   ) as Partial<T>;
 }
 
 // Helper function to convert Firestore Timestamp to YYYY-MM-DD string
-function convertTimestampToString(date: any): string {
-  if (!date) return new Date().toISOString().split("T")[0];
-  
+function convertTimestampToString(date: unknown): string {
+  if (!date) {
+    return new Date().toISOString().split("T")[0];
+  }
+
   // If it's already a string, return it
-  if (typeof date === "string") return date;
-  
+  if (typeof date === "string") {
+    return date;
+  }
+
   // If it's a Firestore Timestamp, convert it
-  if (date && typeof date === "object" && "seconds" in date) {
-    const timestamp = date as { seconds: number; nanoseconds: number };
-    const dateObj = new Date(timestamp.seconds * 1000);
+  if (isFirestoreTimestamp(date)) {
+    const dateObj = new Date(date.seconds * 1000);
     return dateObj.toISOString().split("T")[0];
   }
-  
+
+  // If it's a Date object
+  if (date instanceof Date) {
+    return date.toISOString().split("T")[0];
+  }
+
   // Fallback: try to parse as Date
   try {
-    const dateObj = date instanceof Date ? date : new Date(date);
+    const dateObj = new Date(date as string | number);
     return dateObj.toISOString().split("T")[0];
   } catch {
     return new Date().toISOString().split("T")[0];
   }
 }
 
+// Input validation functions
+function validateExpenseId(id: string): void {
+  if (!id || typeof id !== "string" || id.trim() === "") {
+    throw new ValidationError("Expense ID is required and must be a non-empty string", "id");
+  }
+}
+
+function validateExpense(expense: Expense): void {
+  validateExpenseId(expense.id);
+
+  if (!expense.title || typeof expense.title !== "string" || expense.title.trim() === "") {
+    throw new ValidationError("Expense title is required", "title");
+  }
+
+  if (typeof expense.amount !== "number" || expense.amount < 0 || !isFinite(expense.amount)) {
+    throw new ValidationError(
+      "Expense amount must be a positive number",
+      "amount"
+    );
+  }
+
+  if (!expense.date || typeof expense.date !== "string") {
+    throw new ValidationError("Expense date is required", "date");
+  }
+
+  // Validate date format (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(expense.date)) {
+    throw new ValidationError(
+      "Expense date must be in YYYY-MM-DD format",
+      "date"
+    );
+  }
+}
+
+// Helper function to map Firestore document to Expense
+function mapDocToExpense(doc: QueryDocumentSnapshot): Expense {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    title: data.title as string,
+    amount: data.amount as number,
+    date: convertTimestampToString(data.date),
+    category: data.category as string | undefined,
+    note: data.note as string | undefined,
+    paymentMethod: data.paymentMethod as string | undefined,
+  } as Expense;
+}
+
 export class FirestoreExpenseRepository implements ExpenseRepository {
   async list(): Promise<Expense[]> {
     if (!db) {
-      console.warn("⚠️ Firestore not available, returning empty array");
-      return [];
+      throw new FirestoreNotInitializedError();
     }
+
     try {
-      console.log("📖 Fetching expenses from Firestore...");
+      console.log(LOG_MESSAGES.FETCHING);
       const snap = await getDocs(query(getCollection(), orderBy("date", "desc")));
-      const expenses = snap.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          ...data,
-          date: convertTimestampToString(data.date),
-        } as Expense;
-      });
-      console.log(`✅ Loaded ${expenses.length} expenses from Firestore`);
+      const expenses = snap.docs.map(mapDocToExpense);
+      console.log(LOG_MESSAGES.LOADED(expenses.length));
       return expenses;
-    } catch (error: any) {
-      console.error("❌ Error fetching expenses from Firestore:", error);
+    } catch (error: unknown) {
+      console.error(LOG_MESSAGES.ERROR_FETCHING, error);
+
       // If orderBy fails due to missing index, try without it
-      if (error.code === "failed-precondition") {
-        console.log("⚠️ Index missing, fetching without orderBy...");
-        const snap = await getDocs(getCollection());
-        return snap.docs.map((d) => {
-          const data = d.data();
-          return {
-            id: d.id,
-            ...data,
-            date: convertTimestampToString(data.date),
-          } as Expense;
-        });
+      if (
+        error instanceof Error &&
+        (error as { code?: string }).code === "failed-precondition"
+      ) {
+        console.log(LOG_MESSAGES.INDEX_MISSING);
+        try {
+          const snap = await getDocs(getCollection());
+          const expenses = snap.docs.map(mapDocToExpense);
+          console.log(LOG_MESSAGES.LOADED(expenses.length));
+          return expenses;
+        } catch (fallbackError: unknown) {
+          throw new FirestoreError(
+            "Failed to fetch expenses from Firestore",
+            (fallbackError as { code?: string }).code,
+            fallbackError
+          );
+        }
       }
-      throw error;
+
+      throw new FirestoreError(
+        "Failed to fetch expenses. Please check your connection and try again.",
+        (error as { code?: string }).code,
+        error
+      );
     }
   }
 
   async replaceAll(expenses: Expense[]): Promise<void> {
-    if (!db) return;
+    if (!db) {
+      throw new FirestoreNotInitializedError();
+    }
+
+    // Validate all expenses before processing
+    expenses.forEach((expense) => validateExpense(expense));
+
     try {
-      console.log(`💾 Replacing all expenses in Firestore (${expenses.length} items)...`);
+      console.log(LOG_MESSAGES.REPLACING(expenses.length));
       const col = getCollection();
       const batch = writeBatch(db);
       const existing = await getDocs(col);
@@ -98,57 +211,88 @@ export class FirestoreExpenseRepository implements ExpenseRepository {
       expenses.forEach((exp) => {
         const ref = doc(col, exp.id);
         const { id: _, ...data } = exp;
-        const cleanData = removeUndefined(data); // Remove undefined values
+        const cleanData = removeUndefined(data);
         batch.set(ref, cleanData);
       });
       await batch.commit();
-      console.log("✅ Successfully replaced all expenses in Firestore");
-    } catch (error) {
-      console.error("❌ Error replacing expenses:", error);
-      throw error;
+      console.log(LOG_MESSAGES.REPLACED);
+    } catch (error: unknown) {
+      console.error(LOG_MESSAGES.ERROR_REPLACING, error);
+      throw new FirestoreError(
+        "Failed to replace expenses. Please try again.",
+        (error as { code?: string }).code,
+        error
+      );
     }
   }
 
   async create(expense: Expense): Promise<void> {
-    if (!db) return;
+    if (!db) {
+      throw new FirestoreNotInitializedError();
+    }
+
+    validateExpense(expense);
+
     try {
-      console.log("➕ Creating expense in Firestore:", expense.title);
+      console.log(LOG_MESSAGES.CREATING(expense.title));
       const ref = doc(getCollection(), expense.id);
       const { id: _, ...data } = expense;
-      const cleanData = removeUndefined(data); // Remove undefined values
+      const cleanData = removeUndefined(data);
       await setDoc(ref, cleanData);
-      console.log("✅ Expense created successfully");
-    } catch (error) {
-      console.error("❌ Error creating expense:", error);
-      throw error;
+      console.log(LOG_MESSAGES.CREATED);
+    } catch (error: unknown) {
+      console.error(LOG_MESSAGES.ERROR_CREATING, error);
+      throw new FirestoreError(
+        "Failed to create expense. Please check your connection and try again.",
+        (error as { code?: string }).code,
+        error
+      );
     }
   }
 
   async update(expense: Expense): Promise<void> {
-    if (!db) return;
+    if (!db) {
+      throw new FirestoreNotInitializedError();
+    }
+
+    validateExpense(expense);
+
     try {
-      console.log("✏️ Updating expense in Firestore:", expense.id);
+      console.log(LOG_MESSAGES.UPDATING(expense.id));
       const ref = doc(getCollection(), expense.id);
       const { id: _, ...data } = expense;
-      const cleanData = removeUndefined(data); // Remove undefined values
+      const cleanData = removeUndefined(data);
       await setDoc(ref, cleanData, { merge: true });
-      console.log("✅ Expense updated successfully");
-    } catch (error) {
-      console.error("❌ Error updating expense:", error);
-      throw error;
+      console.log(LOG_MESSAGES.UPDATED);
+    } catch (error: unknown) {
+      console.error(LOG_MESSAGES.ERROR_UPDATING, error);
+      throw new FirestoreError(
+        "Failed to update expense. Please check your connection and try again.",
+        (error as { code?: string }).code,
+        error
+      );
     }
   }
 
   async remove(id: string): Promise<void> {
-    if (!db) return;
+    if (!db) {
+      throw new FirestoreNotInitializedError();
+    }
+
+    validateExpenseId(id);
+
     try {
-      console.log("🗑️ Deleting expense from Firestore:", id);
+      console.log(LOG_MESSAGES.DELETING(id));
       const ref = doc(getCollection(), id);
       await deleteDoc(ref);
-      console.log("✅ Expense deleted successfully");
-    } catch (error) {
-      console.error("❌ Error deleting expense:", error);
-      throw error;
+      console.log(LOG_MESSAGES.DELETED);
+    } catch (error: unknown) {
+      console.error(LOG_MESSAGES.ERROR_DELETING, error);
+      throw new FirestoreError(
+        "Failed to delete expense. Please check your connection and try again.",
+        (error as { code?: string }).code,
+        error
+      );
     }
   }
 }
