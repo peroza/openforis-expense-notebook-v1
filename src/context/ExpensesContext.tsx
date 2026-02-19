@@ -8,8 +8,8 @@ import React, {
   useRef,
 } from "react";
 import type Expense from "@/src/types/Expense";
-import { AsyncStorageExpenseRepository } from "@/src/services/asyncStorageExpenseRepository";
-import { FirestoreExpenseRepository } from "@/src/services/firestoreExpenseRepository";
+import { HybridExpenseRepository } from "@/src/services/hybridExpenseRepository";
+import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
 import { db } from "@/src/config/firebase";
 
 type AddExpenseInput = Omit<Expense, "id">;
@@ -57,23 +57,38 @@ const MOCK_EXPENSES: Expense[] = [
 ];
 
 export function ExpensesProvider({ children }: { children: React.ReactNode }) {
+  const isOnline = useNetworkStatus();
+  const repositoryRef = useRef<HybridExpenseRepository | null>(null);
+
+  // Initialize repository once
   const repository = useMemo(() => {
-    if (db) {
-      console.log("🔥 Using FirestoreExpenseRepository");
-      return new FirestoreExpenseRepository();
+    if (!repositoryRef.current) {
+      repositoryRef.current = new HybridExpenseRepository(isOnline);
+      console.log("🔄 Using HybridExpenseRepository");
     }
-    console.log(
-      "💾 Using AsyncStorageExpenseRepository (Firebase not configured)",
-    );
-    return new AsyncStorageExpenseRepository();
+    return repositoryRef.current;
   }, []);
+
+  // Update online status when it changes
+  useEffect(() => {
+    repository.setOnlineStatus(isOnline);
+
+    // When coming back online, sync the queue
+    if (isOnline) {
+      console.log("🌐 Back online, syncing queue...");
+      void repository.processSyncQueue().then(() => {
+        // Refresh expenses after sync
+        void refresh();
+      });
+    }
+  }, [isOnline, repository]);
+
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
-  const isSyncingRef = useRef(false); // Use ref to track syncing state
+  const isSyncingRef = useRef(false);
 
   const refresh = useCallback(async () => {
-    // Check ref instead of state to avoid dependency issues
     if (isSyncingRef.current) {
       console.log("⏸️ Refresh skipped - already syncing");
       return;
@@ -91,7 +106,7 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
       isSyncingRef.current = false;
       setIsSyncing(false);
     }
-  }, [repository]); // Remove isSyncing from dependencies!
+  }, [repository]);
 
   useEffect(() => {
     const bootstrap = async () => {

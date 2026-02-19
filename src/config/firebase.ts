@@ -1,5 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import { initializeFirestore, persistentLocalCache } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, memoryLocalCache } from "firebase/firestore";
+import { Platform } from "react-native";
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -23,7 +24,12 @@ function getFirebaseApp(): FirebaseApp | null {
 }
 
 export const app = getFirebaseApp();
-export const db = app ? initializeFirestore(app, { localCache: persistentLocalCache() }) : null;
+// Use persistent cache only on web (where IndexedDB is available)
+export const db = app
+  ? initializeFirestore(app, {
+      localCache: Platform.OS === "web" ? persistentLocalCache() : memoryLocalCache(),
+    })
+  : null;
 
 if (db) {
   console.log("✅ Firestore initialized successfully");
