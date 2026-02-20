@@ -104,18 +104,9 @@ const ExpensesScreen = memo(() => {
         </View>
       )}
 
-      <Pressable
-        onPress={handleAddExpense}
-        style={styles.addButton}
-        accessibilityLabel="Add new expense"
-        accessibilityRole="button"
-        accessibilityHint="Opens the form to add a new expense"
-      >
-        <Ionicons name="add-circle" size={24} color="#ffffff" />
-        <Text style={styles.addButtonText}>Add New Expense</Text>
-      </Pressable>
-
-      <ExpenseSummary expenses={expenses} />
+      <View style={styles.summaryWrapper}>
+        <ExpenseSummary expenses={expenses} />
+      </View>
 
       <FlatList
         data={expenses}
@@ -137,11 +128,24 @@ const ExpensesScreen = memo(() => {
             <Ionicons name="receipt-outline" size={64} color="#d1d5db" />
             <Text style={styles.emptyTitle}>No expenses yet</Text>
             <Text style={styles.emptySubtitle}>
-              Tap the button above to add your first expense
+              Tap the button below to add your first expense
             </Text>
           </View>
         }
       />
+
+      <View style={styles.addButtonFooter}>
+        <Pressable
+          onPress={handleAddExpense}
+          style={styles.addButton}
+          accessibilityLabel="Add new expense"
+          accessibilityRole="button"
+          accessibilityHint="Opens the form to add a new expense"
+        >
+          <Ionicons name="add-circle" size={24} color="#ffffff" />
+          <Text style={styles.addButtonText}>Add New Expense</Text>
+        </Pressable>
+      </View>
     </View>
   );
 });
@@ -205,14 +209,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
   },
+  summaryWrapper: {
+    marginTop: 24,
+  },
+  addButtonFooter: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 8,
+    backgroundColor: "#f9fafb",
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+  },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#2563eb",
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 16,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -237,7 +249,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 24,
   },
   listContentEmpty: {
     flexGrow: 1,
