@@ -12,32 +12,31 @@ function RootLayoutNav() {
   const hasNavigatedRef = React.useRef(false);
   const lastSegmentRef = React.useRef<string | undefined>(undefined);
 
-  // Handle navigation based on auth state
+  // Derive primitive booleans so the effect only re-runs on meaningful transitions
+  const isAuthenticated = !!user;
+  const currentSegment = segments[0] as string | undefined;
+  const inTabsGroup = currentSegment === "(tabs)";
+
   useEffect(() => {
-    if (isLoading) return; // Don't navigate while loading
+    if (isLoading) return;
 
-    const currentSegment = segments[0] as string | undefined;
-    const inAuthGroup = currentSegment === "login";
-
-    // Reset navigation flag if segment changed (navigation completed)
     if (currentSegment !== lastSegmentRef.current) {
       hasNavigatedRef.current = false;
       lastSegmentRef.current = currentSegment;
     }
 
-    // Prevent multiple navigations in the same render cycle
-    if (hasNavigatedRef.current) {
-      return;
-    }
+    if (hasNavigatedRef.current) return;
 
-    if (!user && !inAuthGroup) {
-      hasNavigatedRef.current = true;
-      router.replace("/login");
-    } else if (user && inAuthGroup) {
+    if (!isAuthenticated) {
+      if (currentSegment !== "login") {
+        hasNavigatedRef.current = true;
+        router.replace("/login");
+      }
+    } else if (!inTabsGroup) {
       hasNavigatedRef.current = true;
       router.replace("/(tabs)/expenses");
     }
-  }, [user, isLoading, segments, router]);
+  }, [isAuthenticated, isLoading, currentSegment, inTabsGroup, router]);
 
   if (isLoading) {
     return (
