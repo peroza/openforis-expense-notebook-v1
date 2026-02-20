@@ -35,7 +35,7 @@ function RootLayoutNav() {
       router.replace("/login");
     } else if (user && inAuthGroup) {
       hasNavigatedRef.current = true;
-      router.replace("/expenses");
+      router.replace("/(tabs)/expenses");
     }
   }, [user, isLoading, segments, router]);
 
