@@ -82,8 +82,45 @@ const PLACEHOLDER_SECTIONS: SettingsSection[] = [
 
 const SettingsScreen = memo(() => {
   const insets = useSafeAreaInsets();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const router = useRouter();
+
+  const displayName = useMemo(
+    () => user?.displayName?.trim() || user?.email?.split("@")[0] || "User",
+    [user?.displayName, user?.email],
+  );
+  const email = useMemo(() => user?.email ?? "—", [user?.email]);
+  const userId = useMemo(() => user?.uid ?? "", [user?.uid]);
+
+  const renderHeader = useCallback(
+    () => (
+      <View
+        style={styles.userCard}
+        accessibilityLabel={`Account: ${displayName}, ${email}`}
+        accessibilityRole="summary"
+      >
+        <View style={styles.userAvatar}>
+          <Text style={styles.userAvatarText}>
+            {displayName.substring(0, 2).toUpperCase()}
+          </Text>
+        </View>
+        <View style={styles.userInfo}>
+          <Text style={styles.userName} numberOfLines={1}>
+            {displayName}
+          </Text>
+          <Text style={styles.userEmail} numberOfLines={1}>
+            {email}
+          </Text>
+          {userId ? (
+            <Text style={styles.userId} numberOfLines={1}>
+              ID: {userId}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+    ),
+    [displayName, email, userId],
+  );
 
   const handleSignOut = useCallback(() => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -164,6 +201,7 @@ const SettingsScreen = memo(() => {
         renderSectionHeader={renderSectionHeader}
         keyExtractor={keyExtractor}
         contentContainerStyle={sectionListStyle}
+        ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
@@ -176,6 +214,57 @@ const SettingsScreen = memo(() => {
 SettingsScreen.displayName = "SettingsScreen";
 
 const styles = StyleSheet.create({
+  userCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 8,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  userAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#2563eb",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  userAvatarText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  userInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  userName: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: 2,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: 2,
+  },
+  userId: {
+    fontSize: 12,
+    color: "#9ca3af",
+    fontFamily: "monospace",
+  },
   footer: {
     paddingHorizontal: 16,
     paddingTop: 24,
