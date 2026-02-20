@@ -1,5 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { initializeFirestore, persistentLocalCache, memoryLocalCache } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { Platform } from "react-native";
 
 const firebaseConfig = {
@@ -35,4 +36,13 @@ if (db) {
   console.log("✅ Firestore initialized successfully");
 } else {
   console.warn("⚠️ Firestore not initialized - using AsyncStorage fallback");
+}
+
+// Initialize Firebase Authentication
+export const auth = app ? getAuth(app) : null;
+
+if (auth) {
+  console.log("✅ Firebase Authentication initialized successfully");
+} else {
+  console.warn("⚠️ Firebase Authentication not initialized - Firebase app not available");
 }
