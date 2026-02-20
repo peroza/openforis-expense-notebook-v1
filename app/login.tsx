@@ -34,7 +34,6 @@ const LoginScreen = memo(() => {
     try {
       await signInWithEmail(email.trim(), password);
       // Navigation will be handled by auth guard in _layout.tsx
-      router.replace("/expenses");
     } catch (error: any) {
       console.error("Sign in error:", error);
       let errorMessage = "Failed to sign in. Please try again.";
@@ -66,7 +65,6 @@ const LoginScreen = memo(() => {
     try {
       await signInWithGoogle();
       // Navigation will be handled by auth guard in _layout.tsx
-      router.replace("/(tabs)/expenses");
     } catch (error: any) {
       console.error("Google sign in error:", error);
       let errorMessage = "Failed to sign in with Google. Please try again.";

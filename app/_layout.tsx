@@ -31,17 +31,11 @@ function RootLayoutNav() {
     }
 
     if (!user && !inAuthGroup) {
-      // Navigate to login if not already navigating
-      if (!hasNavigatedRef.current) {
-        hasNavigatedRef.current = true;
-        router.replace("/login");
-      }
+      hasNavigatedRef.current = true;
+      router.replace("/login");
     } else if (user && inAuthGroup) {
-      // Navigate to expenses if not already navigating
-      if (!hasNavigatedRef.current) {
-        hasNavigatedRef.current = true;
-        router.replace("/expenses");
-      }
+      hasNavigatedRef.current = true;
+      router.replace("/expenses");
     }
   }, [user, isLoading, segments, router]);
 
