@@ -4,6 +4,8 @@ import { useRouter, useSegments } from "expo-router";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { ExpensesProvider } from "@/src/context/ExpensesContext";
 import { AuthProvider, useAuth } from "@/src/context/AuthContext";
+import { PostsProvider } from "@/src/context/PostsContext";
+import { FirestorePostsRepository } from "@/src/services/firestorePostsRepository";
 
 function RootLayoutNav() {
   const { user, isLoading } = useAuth();
@@ -50,9 +52,17 @@ function RootLayoutNav() {
     return <Stack />;
   }
 
+  // Initialize posts repository
+  const postsRepository = React.useMemo(
+    () => new FirestorePostsRepository(),
+    [],
+  );
+
   return (
     <ExpensesProvider>
-      <Stack />
+      <PostsProvider repository={postsRepository}>
+        <Stack />
+      </PostsProvider>
     </ExpensesProvider>
   );
 }
