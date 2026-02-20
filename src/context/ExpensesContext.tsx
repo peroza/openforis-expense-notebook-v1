@@ -10,7 +10,6 @@ import React, {
 import type Expense from "@/src/types/Expense";
 import { HybridExpenseRepository } from "@/src/services/hybridExpenseRepository";
 import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
-import { db } from "@/src/config/firebase";
 
 type AddExpenseInput = Omit<Expense, "id">;
 
@@ -69,20 +68,6 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
     return repositoryRef.current;
   }, []);
 
-  // Update online status when it changes
-  useEffect(() => {
-    repository.setOnlineStatus(isOnline);
-
-    // When coming back online, sync the queue
-    if (isOnline) {
-      console.log("🌐 Back online, syncing queue...");
-      void repository.processSyncQueue().then(() => {
-        // Refresh expenses after sync
-        void refresh();
-      });
-    }
-  }, [isOnline, repository]);
-
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -107,6 +92,20 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
       setIsSyncing(false);
     }
   }, [repository]);
+
+  // Update online status when it changes
+  useEffect(() => {
+    repository.setOnlineStatus(isOnline);
+
+    // When coming back online, sync the queue
+    if (isOnline) {
+      console.log("🌐 Back online, syncing queue...");
+      void repository.processSyncQueue().then(() => {
+        // Refresh expenses after sync
+        void refresh();
+      });
+    }
+  }, [isOnline, repository, refresh]);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -160,19 +159,32 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
     [expenses],
   );
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      expenses,
+      isLoading,
+      isSyncing,
+      refresh,
+      addExpense,
+      updateExpense,
+      deleteExpense,
+      getExpenseById,
+    }),
+    [
+      expenses,
+      isLoading,
+      isSyncing,
+      refresh,
+      addExpense,
+      updateExpense,
+      deleteExpense,
+      getExpenseById,
+    ],
+  );
+
   return (
-    <ExpensesContext.Provider
-      value={{
-        expenses,
-        isLoading,
-        isSyncing,
-        refresh,
-        addExpense,
-        updateExpense,
-        deleteExpense,
-        getExpenseById,
-      }}
-    >
+    <ExpensesContext.Provider value={contextValue}>
       {children}
     </ExpensesContext.Provider>
   );
