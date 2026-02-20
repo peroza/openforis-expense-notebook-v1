@@ -27,6 +27,10 @@ type SettingsSection = {
   data: SettingsItem[];
 };
 
+/**
+ * Settings sections. Preferences (Theme, Language, Notifications) are
+ * placeholders for future implementation—expand when adding preference screens.
+ */
 const PLACEHOLDER_SECTIONS: SettingsSection[] = [
   {
     id: "account",
