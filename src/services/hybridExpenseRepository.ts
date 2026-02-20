@@ -163,9 +163,20 @@ export class HybridExpenseRepository implements ExpenseRepository {
             await this.remoteRepo.create({ ...exp, amount });
             break;
           }
-          case "update":
-            await this.remoteRepo.update(operation.expense);
+          case "update": {
+            const exp = operation.expense;
+            // #region agent log
+            fetch('http://127.0.0.1:7268/ingest/c6b46800-239b-49b2-9a12-99b776a19fb0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d33332'},body:JSON.stringify({sessionId:'d33332',location:'hybridExpenseRepository.ts:processSyncQueue:update',message:'update op expense',data:{amount:exp.amount,typeofAmount:typeof exp.amount,id:exp.id},timestamp:Date.now(),runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+            // #endregion
+            const amount = Number(exp.amount);
+            if (!Number.isFinite(amount) || amount <= 0) {
+              console.warn(`Skipping update for expense ${exp.id}: invalid amount`, exp.amount);
+              await this.syncQueue.removeFromQueue(i);
+              break;
+            }
+            await this.remoteRepo.update({ ...exp, amount });
             break;
+          }
           case "delete":
             await this.remoteRepo.remove(operation.id);
             break;
