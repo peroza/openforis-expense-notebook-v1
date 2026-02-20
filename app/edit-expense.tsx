@@ -40,7 +40,7 @@ const EditExpenseScreen = memo(() => {
   useEffect(() => {
     if (!expenseData) return;
     setTitle(expenseData.title);
-    setAmount(expenseData.amount.toString());
+    setAmount(expenseData.amount != null ? String(expenseData.amount) : "");
     setDate(new Date(expenseData.date));
     setCategory(expenseData.category || "");
     setNote(expenseData.note || "");

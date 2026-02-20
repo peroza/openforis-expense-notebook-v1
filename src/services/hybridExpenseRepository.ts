@@ -152,9 +152,17 @@ export class HybridExpenseRepository implements ExpenseRepository {
       const operation = queue[i];
       try {
         switch (operation.type) {
-          case "create":
-            await this.remoteRepo.create(operation.expense);
+          case "create": {
+            const exp = operation.expense;
+            const amount = Number(exp.amount);
+            if (!Number.isFinite(amount) || amount <= 0) {
+              console.warn(`Skipping create for expense ${exp.id}: invalid amount`, exp.amount);
+              await this.syncQueue.removeFromQueue(i);
+              break;
+            }
+            await this.remoteRepo.create({ ...exp, amount });
             break;
+          }
           case "update":
             await this.remoteRepo.update(operation.expense);
             break;
