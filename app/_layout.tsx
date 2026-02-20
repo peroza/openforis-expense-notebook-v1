@@ -35,8 +35,13 @@ function RootLayoutNav() {
         router.replace("/login");
       }
     } else if (!inTabsGroup) {
-      hasNavigatedRef.current = true;
-      router.replace("/(tabs)/expenses");
+      // Only redirect to expenses when we're on an "entry" route (e.g. initial load).
+      // Do not redirect when user is on allowed stack screens (add-expense, edit-expense).
+      const allowedOutsideTabs = ["add-expense", "edit-expense"];
+      if (!allowedOutsideTabs.includes(currentSegment ?? "")) {
+        hasNavigatedRef.current = true;
+        router.replace("/(tabs)/expenses");
+      }
     }
   }, [isAuthenticated, isLoading, currentSegment, inTabsGroup, router]);
 
@@ -61,7 +66,11 @@ function RootLayoutNav() {
   return (
     <ExpensesProvider>
       <PostsProvider repository={postsRepository}>
-        <Stack />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        />
       </PostsProvider>
     </ExpensesProvider>
   );
