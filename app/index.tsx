@@ -10,7 +10,7 @@ export default function Index() {
         subtitle="This is a project from the OpenForis team"
         imageSource={require("@/assets/images/expense-notebook-text-logo.jpg")}
       />
-      <Link href="/expenses" style={styles.expensesLink}>
+      <Link href="/(tabs)/expenses" style={styles.expensesLink}>
         <View style={styles.expensesButton}>
           <Text style={styles.expensesButtonText}>View Expenses →</Text>
         </View>
