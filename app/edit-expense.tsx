@@ -13,6 +13,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useExpenses } from "@/src/context/ExpensesContext";
 import { EXPENSE_CATEGORIES } from "@/src/constants/categories";
 
@@ -23,6 +24,7 @@ const EditExpenseScreen = memo(() => {
   const expenseId = Array.isArray(rawId) ? rawId[0] : rawId;
 
   const { getExpenseById, updateExpense } = useExpenses();
+  const insets = useSafeAreaInsets();
 
   const expenseData = useMemo(
     () => (expenseId ? getExpenseById(expenseId) : undefined),
@@ -121,7 +123,7 @@ const EditExpenseScreen = memo(() => {
 
   if (!expenseId) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <Ionicons name="alert-circle-outline" size={64} color="#ef4444" />
         <Text style={styles.errorTitle}>Expense ID Missing</Text>
         <Text style={styles.errorText}>
@@ -141,7 +143,7 @@ const EditExpenseScreen = memo(() => {
 
   if (!expenseData) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <ActivityIndicator size="large" color="#2563eb" />
         <Text style={styles.loadingText}>Loading expense...</Text>
         <Pressable
@@ -157,7 +159,15 @@ const EditExpenseScreen = memo(() => {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
