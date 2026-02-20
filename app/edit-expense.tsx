@@ -16,6 +16,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useExpenses } from "@/src/context/ExpensesContext";
 import { EXPENSE_CATEGORIES } from "@/src/constants/categories";
+import { parseAmountInput } from "@/src/utils/amount";
 
 const EditExpenseScreen = memo(() => {
   const router = useRouter();
@@ -85,6 +86,12 @@ const EditExpenseScreen = memo(() => {
       return;
     }
 
+    const amountNum = parseAmountInput(amount);
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      Alert.alert("Validation Error", "Please enter a valid positive amount");
+      return;
+    }
+
     if (!expenseData) {
       Alert.alert("Error", "Expense not found");
       return;
@@ -93,7 +100,7 @@ const EditExpenseScreen = memo(() => {
     await updateExpense({
       ...expenseData,
       title: title.trim(),
-      amount: Number(amount),
+      amount: amountNum,
       date: formatDate(date),
       category: category || undefined,
       note: note.trim() || undefined,
