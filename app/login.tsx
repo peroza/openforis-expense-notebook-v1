@@ -34,7 +34,7 @@ const LoginScreen = memo(() => {
     try {
       await signInWithEmail(email.trim(), password);
       // Navigation will be handled by auth guard in _layout.tsx
-      router.replace("/(tabs)/expenses");
+      router.replace("/expenses");
     } catch (error: any) {
       console.error("Sign in error:", error);
       let errorMessage = "Failed to sign in. Please try again.";
@@ -93,12 +93,12 @@ const LoginScreen = memo(() => {
 
   const signInButtonStyle = useMemo(
     () => [styles.signInButton, isLoading && styles.buttonDisabled],
-    [isLoading]
+    [isLoading],
   );
 
   const googleButtonStyle = useMemo(
     () => [styles.googleButton, isLoading && styles.buttonDisabled],
-    [isLoading]
+    [isLoading],
   );
 
   return (

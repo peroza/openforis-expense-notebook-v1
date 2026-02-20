@@ -1,7 +1,8 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { initializeFirestore, persistentLocalCache, memoryLocalCache } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { initializeAuth, getAuth } from "firebase/auth";
 import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -38,11 +39,53 @@ if (db) {
   console.warn("⚠️ Firestore not initialized - using AsyncStorage fallback");
 }
 
-// Initialize Firebase Authentication
-export const auth = app ? getAuth(app) : null;
+// Initialize Firebase Authentication with AsyncStorage persistence
+let authInstance: ReturnType<typeof getAuth> | null = null;
 
-if (auth) {
-  console.log("✅ Firebase Authentication initialized successfully");
-} else {
+if (app) {
+  try {
+    // For React Native, try to initialize with AsyncStorage persistence
+    if (Platform.OS !== "web") {
+      // Use dynamic require to access getReactNativePersistence
+      const authModule = require("firebase/auth") as typeof import("firebase/auth") & {
+        getReactNativePersistence?: (storage: typeof AsyncStorage) => any;
+      };
+      
+      if (authModule.getReactNativePersistence) {
+        authInstance = initializeAuth(app, {
+          persistence: authModule.getReactNativePersistence(AsyncStorage),
+        });
+        console.log("✅ Firebase Authentication initialized with AsyncStorage persistence");
+      } else {
+        // Fallback: use getAuth
+        authInstance = getAuth(app);
+        console.warn("⚠️ getReactNativePersistence not available, using getAuth");
+      }
+    } else {
+      // For web, use getAuth directly
+      authInstance = getAuth(app);
+      console.log("✅ Firebase Authentication initialized (web)");
+    }
+  } catch (error: any) {
+    // If auth is already initialized, use getAuth
+    if (error?.code === "auth/already-initialized") {
+      authInstance = getAuth(app);
+      console.log("✅ Firebase Authentication initialized (already initialized)");
+    } else {
+      console.error("❌ Error initializing Firebase Auth:", error);
+      // Fallback to getAuth
+      try {
+        authInstance = getAuth(app);
+        console.log("✅ Firebase Authentication initialized (fallback)");
+      } catch (fallbackError) {
+        console.error("❌ Failed to initialize Firebase Auth:", fallbackError);
+      }
+    }
+  }
+}
+
+export const auth = authInstance;
+
+if (!auth) {
   console.warn("⚠️ Firebase Authentication not initialized - Firebase app not available");
 }

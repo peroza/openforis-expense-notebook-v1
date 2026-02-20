@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useRef,
 } from "react";
 import type { User } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,6 +30,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const previousUserIdRef = useRef<string | null>(null);
+  const hasInitializedRef = useRef(false);
 
   // Load persisted auth state on mount
   useEffect(() => {
@@ -50,30 +53,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen to auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
-      setUser(firebaseUser);
-      setIsLoading(false);
+    let isMounted = true;
+    let processingTimeout: number | null = null;
 
-      // Persist auth state
-      try {
-        if (firebaseUser) {
-          // Store minimal user info (uid, email) for quick reference
-          await AsyncStorage.setItem(
-            AUTH_STORAGE_KEY,
-            JSON.stringify({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-            }),
-          );
-        } else {
-          await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-        }
-      } catch (error) {
-        console.error("Error persisting auth state:", error);
+    const unsubscribe = onAuthStateChanged((firebaseUser) => {
+      if (!isMounted) return;
+
+      const userId = firebaseUser?.uid || null;
+      const previousUserId = previousUserIdRef.current;
+
+      // Debounce: if we're already processing the same state, skip
+      if (userId === previousUserId && hasInitializedRef.current) {
+        return; // Skip duplicate calls
       }
+
+      // Clear any pending processing
+      if (processingTimeout) {
+        clearTimeout(processingTimeout);
+      }
+
+      // Update ref immediately to prevent duplicate processing
+      previousUserIdRef.current = userId;
+
+      // Process asynchronously with a small delay to batch rapid calls
+      processingTimeout = setTimeout(async () => {
+        if (!isMounted) return;
+
+        setUser(firebaseUser);
+
+        if (!hasInitializedRef.current) {
+          setIsLoading(false);
+          hasInitializedRef.current = true;
+        }
+
+        // Persist auth state
+        try {
+          if (firebaseUser) {
+            // Store minimal user info (uid, email) for quick reference
+            await AsyncStorage.setItem(
+              AUTH_STORAGE_KEY,
+              JSON.stringify({
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+              }),
+            );
+          } else {
+            await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+          }
+        } catch (error) {
+          console.error("Error persisting auth state:", error);
+        }
+      }, 50); // Small delay to batch rapid calls
     });
 
+    // Fallback: if onAuthStateChanged doesn't fire within 2 seconds, set loading to false
+    const timeoutId = setTimeout(() => {
+      if (isMounted && !hasInitializedRef.current) {
+        setIsLoading(false);
+        hasInitializedRef.current = true;
+      }
+    }, 2000);
+
     return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      if (processingTimeout) {
+        clearTimeout(processingTimeout);
+      }
       unsubscribe();
     };
   }, []);

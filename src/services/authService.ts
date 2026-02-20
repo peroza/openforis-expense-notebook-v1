@@ -102,6 +102,7 @@ export function onAuthStateChanged(
 ): () => void {
   if (!auth) {
     console.warn("⚠️ Firebase Auth is not initialized");
+    // Don't call callback - let the context handle the loading state
     // Return a no-op unsubscribe function
     return () => {};
   }
