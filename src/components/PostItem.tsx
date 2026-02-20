@@ -1,12 +1,14 @@
-import React, { memo, useMemo } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { memo, useMemo, useCallback } from "react";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import type Post from "@/src/types/Post";
 
 interface PostItemProps {
   post: Post;
+  onPress?: () => void;
 }
 
-const PostItem = memo<PostItemProps>(({ post }) => {
+const PostItem = memo<PostItemProps>(({ post, onPress }) => {
   // Format timestamp to readable date/time
   const formattedDate = useMemo(() => {
     try {
@@ -20,11 +22,11 @@ const PostItem = memo<PostItemProps>(({ post }) => {
       if (diffMins < 1) {
         return "Just now";
       } else if (diffMins < 60) {
-        return `${diffMins}m ago`;
+        return `${diffMins}m`;
       } else if (diffHours < 24) {
-        return `${diffHours}h ago`;
+        return `${diffHours}h`;
       } else if (diffDays < 7) {
-        return `${diffDays}d ago`;
+        return `${diffDays}d`;
       } else {
         return date.toLocaleDateString("en-US", {
           month: "short",
@@ -38,54 +40,192 @@ const PostItem = memo<PostItemProps>(({ post }) => {
     }
   }, [post.createdAt]);
 
+  // Get initials for avatar
+  const authorInitials = useMemo(() => {
+    const names = post.authorName.trim().split(" ");
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    }
+    return post.authorName.substring(0, 2).toUpperCase();
+  }, [post.authorName]);
+
+  const handlePress = useCallback(() => {
+    if (onPress) {
+      onPress();
+    }
+  }, [onPress]);
+
+  const accessibilityLabel = useMemo(
+    () => `Post by ${post.authorName}, ${formattedDate}: ${post.content}`,
+    [post.authorName, formattedDate, post.content],
+  );
+
   return (
-    <View
-      style={styles.card}
-      accessibilityLabel={`Post by ${post.authorName}: ${post.content}`}
+    <Pressable
+      style={({ pressed }) => [
+        styles.container,
+        pressed && styles.containerPressed,
+      ]}
+      onPress={handlePress}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityHint="Tap to view post details"
     >
-      <View style={styles.header}>
-        <Text style={styles.authorName}>{post.authorName}</Text>
-        <Text style={styles.timestamp}>{formattedDate}</Text>
+      <View style={styles.content}>
+        {/* Avatar */}
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{authorInitials}</Text>
+          </View>
+        </View>
+
+        {/* Post Content */}
+        <View style={styles.postContent}>
+          {/* Header: Author name and timestamp */}
+          <View style={styles.header}>
+            <Text style={styles.authorName} numberOfLines={1}>
+              {post.authorName}
+            </Text>
+            <Text style={styles.separator}>·</Text>
+            <Text style={styles.timestamp}>{formattedDate}</Text>
+          </View>
+
+          {/* Post text */}
+          <Text style={styles.text} selectable>
+            {post.content}
+          </Text>
+
+          {/* Action buttons (Twitter-like) */}
+          <View style={styles.actions}>
+            <Pressable
+              style={styles.actionButton}
+              accessibilityLabel="Reply to post"
+              accessibilityRole="button"
+              accessibilityHint="Opens reply dialog"
+            >
+              <Ionicons name="chatbubble-outline" size={18} color="#6b7280" />
+              <Text style={styles.actionText}>0</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.actionButton}
+              accessibilityLabel="Repost"
+              accessibilityRole="button"
+              accessibilityHint="Reposts this post"
+            >
+              <Ionicons name="repeat-outline" size={18} color="#6b7280" />
+              <Text style={styles.actionText}>0</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.actionButton}
+              accessibilityLabel="Like post"
+              accessibilityRole="button"
+              accessibilityHint="Likes this post"
+            >
+              <Ionicons name="heart-outline" size={18} color="#6b7280" />
+              <Text style={styles.actionText}>0</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.actionButton}
+              accessibilityLabel="Share post"
+              accessibilityRole="button"
+              accessibilityHint="Shares this post"
+            >
+              <Ionicons name="share-outline" size={18} color="#6b7280" />
+            </Pressable>
+          </View>
+        </View>
       </View>
-      <Text style={styles.content}>{post.content}</Text>
-    </View>
+    </Pressable>
   );
 });
 
 PostItem.displayName = "PostItem";
 
 const styles = StyleSheet.create({
-  card: {
+  container: {
     backgroundColor: "#ffffff",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    marginHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  containerPressed: {
+    backgroundColor: "#f9fafb",
+  },
+  content: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  avatarContainer: {
+    marginRight: 12,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#2563eb",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  postContent: {
+    flex: 1,
+    paddingTop: 2,
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 4,
+    flexWrap: "wrap",
   },
   authorName: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: "#111827",
+    marginRight: 4,
+  },
+  separator: {
+    fontSize: 15,
+    color: "#6b7280",
+    marginHorizontal: 4,
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: 15,
     color: "#6b7280",
   },
-  content: {
+  text: {
     fontSize: 15,
-    color: "#374151",
-    lineHeight: 22,
+    color: "#111827",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  actions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingRight: 40,
+    marginTop: 4,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 20,
+    minWidth: 60,
+  },
+  actionText: {
+    fontSize: 13,
+    color: "#6b7280",
+    fontWeight: "400",
   },
 });
 
