@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import WelcomeMessage from "@/src/components/WelcomeMessage";
 import ExpenseItem from "@/src/components/ExpenseItem";
 import ExpenseSummary from "@/src/components/ExpenseSummary";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useExpenses } from "@/src/context/ExpensesContext";
 import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
 
@@ -22,6 +23,7 @@ const ExpensesScreen = memo(() => {
     useExpenses();
   const isOnline = useNetworkStatus();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -68,7 +70,7 @@ const ExpensesScreen = memo(() => {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color="#2563eb" />
         <Text style={styles.loadingText}>Loading expenses...</Text>
       </View>
@@ -76,7 +78,7 @@ const ExpensesScreen = memo(() => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.headerContainer}>
         <WelcomeMessage
           title="Expenses"
