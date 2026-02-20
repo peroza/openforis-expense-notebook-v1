@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
     paddingTop: 8,
-    paddingBottom: 8,
-    height: 60,
+    // Do not set height or paddingBottom so the tab bar can use the
+    // bottom safe area inset on iPhones with home indicator.
   },
 });

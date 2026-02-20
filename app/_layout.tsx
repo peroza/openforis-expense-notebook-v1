@@ -55,7 +55,13 @@ function RootLayoutNav() {
   }
 
   if (!user) {
-    return <Stack />;
+    return (
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      />
+    );
   }
 
   // Initialize posts repository

@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -109,6 +110,15 @@ const LoginScreen = memo(() => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require("@/assets/images/expense-notebook-text-logo-no-bckg.png")}
+              style={styles.logo}
+              resizeMode="contain"
+              accessibilityLabel="Expense Notebook OpenForis logo"
+              accessibilityRole="image"
+            />
+          </View>
           <View style={styles.header}>
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
@@ -232,6 +242,15 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 400,
     alignSelf: "center",
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  logo: {
+    width: "100%",
+    maxWidth: 380,
+    height: 120,
   },
   header: {
     marginBottom: 32,
