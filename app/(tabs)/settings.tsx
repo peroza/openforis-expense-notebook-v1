@@ -2,11 +2,16 @@ import React, { memo, useCallback, useMemo } from "react";
 import {
   View,
   Text,
+  Alert,
+  Pressable,
   StyleSheet,
   SectionList,
   type SectionListData,
   type ListRenderItemInfo,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@/src/context/AuthContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SettingsItem = {
@@ -77,6 +82,43 @@ const PLACEHOLDER_SECTIONS: SettingsSection[] = [
 
 const SettingsScreen = memo(() => {
   const insets = useSafeAreaInsets();
+  const { signOut } = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = useCallback(() => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await signOut();
+          router.replace("/login");
+        },
+      },
+    ]);
+  }, [signOut, router]);
+
+  const renderFooter = useCallback(
+    () => (
+      <View style={styles.footer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.signOutButton,
+            pressed && styles.signOutButtonPressed,
+          ]}
+          onPress={handleSignOut}
+          accessibilityLabel="Sign out"
+          accessibilityRole="button"
+        >
+          <Ionicons name="log-out-outline" size={20} color="#dc2626" />
+          <Text style={styles.signOutButtonText}>Sign Out</Text>
+        </Pressable>
+      </View>
+    ),
+    [handleSignOut],
+  );
+
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<SettingsItem>) => (
       <View style={styles.item}>
@@ -122,6 +164,7 @@ const SettingsScreen = memo(() => {
         renderSectionHeader={renderSectionHeader}
         keyExtractor={keyExtractor}
         contentContainerStyle={sectionListStyle}
+        ListFooterComponent={renderFooter}
         stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
         accessibilityLabel="Settings sections"
@@ -133,6 +176,32 @@ const SettingsScreen = memo(() => {
 SettingsScreen.displayName = "SettingsScreen";
 
 const styles = StyleSheet.create({
+  footer: {
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  signOutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#fecaca",
+  },
+  signOutButtonPressed: {
+    backgroundColor: "#fef2f2",
+    opacity: 0.9,
+  },
+  signOutButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#dc2626",
+  },
   container: {
     flex: 1,
     backgroundColor: "#f9fafb",
