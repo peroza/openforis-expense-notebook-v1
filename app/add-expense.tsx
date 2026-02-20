@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EXPENSE_CATEGORIES } from "@/src/constants/categories";
 import { useExpenses } from "@/src/context/ExpensesContext";
 
@@ -25,6 +26,7 @@ const AddExpenseScreen = memo(() => {
   const [note, setNote] = useState("");
   const { addExpense } = useExpenses();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const formatDate = useCallback((date: Date) => {
     return date.toISOString().split("T")[0]; // YYYY-MM-DD
@@ -107,7 +109,15 @@ const AddExpenseScreen = memo(() => {
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
