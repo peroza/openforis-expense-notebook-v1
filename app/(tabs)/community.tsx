@@ -14,6 +14,7 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePosts } from "@/src/context/PostsContext";
 import { useAuth } from "@/src/context/AuthContext";
 import PostItem from "@/src/components/PostItem";
@@ -22,6 +23,7 @@ import type Post from "@/src/types/Post";
 const CommunityScreen = memo(() => {
   const { posts, isLoading, refresh, createPost } = usePosts();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [postContent, setPostContent] = useState("");
@@ -102,13 +104,17 @@ const CommunityScreen = memo(() => {
   );
 
   const createButtonStyle = useMemo(
-    () => [styles.createButton, isCreating && styles.createButtonDisabled],
-    [isCreating],
+    () => [
+      styles.createButton,
+      { bottom: 24 + insets.bottom },
+      isCreating && styles.createButtonDisabled,
+    ],
+    [isCreating, insets.bottom],
   );
 
   if (isLoading && posts.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color="#2563eb" />
         <Text style={styles.loadingText}>Loading posts...</Text>
       </View>
@@ -116,7 +122,7 @@ const CommunityScreen = memo(() => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Community Feed</Text>
         <Text style={styles.subtitle}>Stay updated with the latest news</Text>
@@ -306,7 +312,6 @@ const styles = StyleSheet.create({
   },
   createButton: {
     position: "absolute",
-    bottom: 24,
     right: 24,
     width: 56,
     height: 56,

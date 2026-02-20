@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Stack } from "expo-router";
 import { useRouter, useSegments } from "expo-router";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { ExpensesProvider } from "@/src/context/ExpensesContext";
 import { AuthProvider, useAuth } from "@/src/context/AuthContext";
@@ -78,9 +79,11 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 
