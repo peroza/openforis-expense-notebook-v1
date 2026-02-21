@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EXPENSE_CATEGORIES } from "@/src/constants/categories";
+import SuccessToast from "@/src/components/SuccessToast";
 import { useExpenses } from "@/src/context/ExpensesContext";
 import { triggerLightImpact } from "@/src/utils/haptics";
 import { parseAmountInput } from "@/src/utils/amount";
@@ -28,6 +29,7 @@ const AddExpenseScreen = memo(() => {
   const [category, setCategory] = useState<string>("");
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [note, setNote] = useState("");
+  const [showToast, setShowToast] = useState(false);
   const { addExpense } = useExpenses();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -36,15 +38,12 @@ const AddExpenseScreen = memo(() => {
     return date.toISOString().split("T")[0]; // YYYY-MM-DD
   }, []);
 
-  const handleDateChange = useCallback(
-    (event: any, selectedDate?: Date) => {
-      setShowDatePicker(false);
-      if (selectedDate) {
-        setDate(selectedDate);
-      }
-    },
-    [],
-  );
+  const handleDateChange = useCallback((event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  }, []);
 
   const handleCategorySelect = useCallback((cat: string) => {
     setCategory(cat);
@@ -97,8 +96,13 @@ const AddExpenseScreen = memo(() => {
     }
 
     await addExpense(expenseData);
+    setShowToast(true);
+  }, [title, amount, date, category, note, formatDate, addExpense]);
+
+  const handleToastDismiss = useCallback(() => {
+    setShowToast(false);
     router.back();
-  }, [title, amount, date, category, note, formatDate, addExpense, router]);
+  }, [router]);
 
   const handleCancel = useCallback(() => {
     router.back();
@@ -107,10 +111,7 @@ const AddExpenseScreen = memo(() => {
   const formattedDate = useMemo(() => formatDate(date), [date, formatDate]);
 
   const categoryButtonStyle = useMemo(
-    () => [
-      styles.pickerButton,
-      category && styles.pickerButtonSelected,
-    ],
+    () => [styles.pickerButton, category && styles.pickerButtonSelected],
     [category],
   );
 
@@ -140,175 +141,193 @@ const AddExpenseScreen = memo(() => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-        <View style={styles.header}>
-          <Text style={styles.title}>Add New Expense</Text>
-          <Pressable
-            onPress={handleCancel}
-            style={styles.cancelButton}
-            accessibilityLabel="Cancel and go back"
-            accessibilityRole="button"
-          >
-            <Ionicons name="close" size={24} color="#6b7280" />
-          </Pressable>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.field}>
-            <Text style={styles.label}>Title *</Text>
-            <TextInput
-              style={styles.input}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Enter expense title"
-              placeholderTextColor="#9ca3af"
-              accessibilityLabel="Expense title input"
-              accessibilityRole="text"
-            />
+          <View style={styles.header}>
+            <Text style={styles.title}>Add New Expense</Text>
+            <Pressable
+              onPress={handleCancel}
+              style={styles.cancelButton}
+              accessibilityLabel="Cancel and go back"
+              accessibilityRole="button"
+            >
+              <Ionicons name="close" size={24} color="#6b7280" />
+            </Pressable>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Amount *</Text>
-            <View style={styles.amountContainer}>
-              <Text style={styles.currency}>€</Text>
+          <View style={styles.form}>
+            <View style={styles.field}>
+              <Text style={styles.label}>Title *</Text>
               <TextInput
-                style={styles.amountInput}
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="0.00"
+                style={styles.input}
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Enter expense title"
                 placeholderTextColor="#9ca3af"
-                keyboardType="decimal-pad"
-                accessibilityLabel="Expense amount input"
+                accessibilityLabel="Expense title input"
+                accessibilityRole="text"
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Amount *</Text>
+              <View style={styles.amountContainer}>
+                <Text style={styles.currency}>€</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  value={amount}
+                  onChangeText={setAmount}
+                  placeholder="0.00"
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="decimal-pad"
+                  accessibilityLabel="Expense amount input"
+                  accessibilityRole="text"
+                />
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Category</Text>
+              <Pressable
+                onPress={handleOpenCategoryPicker}
+                style={categoryButtonStyle}
+                accessibilityLabel={`Category: ${category || "Not selected"}`}
+                accessibilityRole="button"
+                accessibilityHint="Opens category selection modal"
+              >
+                <Text
+                  style={[
+                    styles.pickerText,
+                    category && styles.pickerTextSelected,
+                  ]}
+                >
+                  {category || "Select category"}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color="#6b7280" />
+              </Pressable>
+            </View>
+
+            <Modal
+              visible={showCategoryPicker}
+              transparent={true}
+              animationType="fade"
+              onRequestClose={handleCloseCategoryPicker}
+            >
+              <Pressable
+                style={styles.modalBackdrop}
+                onPress={handleCloseCategoryPicker}
+                accessibilityLabel="Close category picker"
+              >
+                <Pressable
+                  style={styles.modalContent}
+                  onPress={(e) => e.stopPropagation()}
+                >
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Select Category</Text>
+                    <Pressable
+                      onPress={handleCloseCategoryPicker}
+                      style={styles.modalCloseButton}
+                      accessibilityLabel="Close"
+                      accessibilityRole="button"
+                    >
+                      <Ionicons name="close" size={24} color="#6b7280" />
+                    </Pressable>
+                  </View>
+                  <ScrollView
+                    style={styles.categoryList}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    {EXPENSE_CATEGORIES.map((cat) => (
+                      <Pressable
+                        key={cat}
+                        onPress={() => handleCategorySelect(cat)}
+                        style={[
+                          styles.categoryOption,
+                          category === cat && styles.categoryOptionSelected,
+                        ]}
+                        accessibilityLabel={`Select ${cat} category`}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: category === cat }}
+                      >
+                        <Text
+                          style={[
+                            styles.categoryOptionText,
+                            category === cat &&
+                              styles.categoryOptionTextSelected,
+                          ]}
+                        >
+                          {cat}
+                        </Text>
+                        {category === cat && (
+                          <Ionicons
+                            name="checkmark"
+                            size={20}
+                            color="#1976d2"
+                          />
+                        )}
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </Pressable>
+              </Pressable>
+            </Modal>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Date</Text>
+              <Pressable
+                onPress={handleOpenDatePicker}
+                style={dateButtonStyle}
+                accessibilityLabel={`Date: ${formattedDate}`}
+                accessibilityRole="button"
+                accessibilityHint="Opens date picker"
+              >
+                <Ionicons name="calendar-outline" size={20} color="#2563eb" />
+                <Text style={styles.dateDisplay}>{formattedDate}</Text>
+              </Pressable>
+            </View>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
+            )}
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Note (optional)</Text>
+              <TextInput
+                style={styles.noteInput}
+                value={note}
+                onChangeText={setNote}
+                placeholder="Add a note..."
+                placeholderTextColor="#9ca3af"
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+                accessibilityLabel="Expense note input"
                 accessibilityRole="text"
               />
             </View>
           </View>
+        </ScrollView>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Category</Text>
-            <Pressable
-              onPress={handleOpenCategoryPicker}
-              style={categoryButtonStyle}
-              accessibilityLabel={`Category: ${category || "Not selected"}`}
-              accessibilityRole="button"
-              accessibilityHint="Opens category selection modal"
-            >
-              <Text style={[styles.pickerText, category && styles.pickerTextSelected]}>
-                {category || "Select category"}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#6b7280" />
-            </Pressable>
-          </View>
-
-          <Modal
-            visible={showCategoryPicker}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={handleCloseCategoryPicker}
+        <View style={styles.footer}>
+          <Pressable
+            onPress={handleSave}
+            style={styles.saveButton}
+            accessibilityLabel="Save expense"
+            accessibilityRole="button"
+            accessibilityHint="Saves the expense and returns to expenses list"
           >
-            <Pressable
-              style={styles.modalBackdrop}
-              onPress={handleCloseCategoryPicker}
-              accessibilityLabel="Close category picker"
-            >
-              <Pressable
-                style={styles.modalContent}
-                onPress={(e) => e.stopPropagation()}
-              >
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Select Category</Text>
-                  <Pressable
-                    onPress={handleCloseCategoryPicker}
-                    style={styles.modalCloseButton}
-                    accessibilityLabel="Close"
-                    accessibilityRole="button"
-                  >
-                    <Ionicons name="close" size={24} color="#6b7280" />
-                  </Pressable>
-                </View>
-                <ScrollView style={styles.categoryList} showsVerticalScrollIndicator={false}>
-                  {EXPENSE_CATEGORIES.map((cat) => (
-                    <Pressable
-                      key={cat}
-                      onPress={() => handleCategorySelect(cat)}
-                      style={[
-                        styles.categoryOption,
-                        category === cat && styles.categoryOptionSelected,
-                      ]}
-                      accessibilityLabel={`Select ${cat} category`}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: category === cat }}
-                    >
-                      <Text
-                        style={[
-                          styles.categoryOptionText,
-                          category === cat && styles.categoryOptionTextSelected,
-                        ]}
-                      >
-                        {cat}
-                      </Text>
-                      {category === cat && (
-                        <Ionicons name="checkmark" size={20} color="#1976d2" />
-                      )}
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </Pressable>
-            </Pressable>
-          </Modal>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Date</Text>
-            <Pressable
-              onPress={handleOpenDatePicker}
-              style={dateButtonStyle}
-              accessibilityLabel={`Date: ${formattedDate}`}
-              accessibilityRole="button"
-              accessibilityHint="Opens date picker"
-            >
-              <Ionicons name="calendar-outline" size={20} color="#2563eb" />
-              <Text style={styles.dateDisplay}>{formattedDate}</Text>
-            </Pressable>
-          </View>
-
-          {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-            />
-          )}
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Note (optional)</Text>
-            <TextInput
-              style={styles.noteInput}
-              value={note}
-              onChangeText={setNote}
-              placeholder="Add a note..."
-              placeholderTextColor="#9ca3af"
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              accessibilityLabel="Expense note input"
-              accessibilityRole="text"
-            />
-          </View>
+            <Ionicons name="checkmark-circle" size={24} color="#ffffff" />
+            <Text style={styles.saveButtonText}>Save Expense</Text>
+          </Pressable>
         </View>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Pressable
-          onPress={handleSave}
-          style={styles.saveButton}
-          accessibilityLabel="Save expense"
-          accessibilityRole="button"
-          accessibilityHint="Saves the expense and returns to expenses list"
-        >
-          <Ionicons name="checkmark-circle" size={24} color="#ffffff" />
-          <Text style={styles.saveButtonText}>Save Expense</Text>
-        </Pressable>
-      </View>
+        <SuccessToast
+          visible={showToast}
+          message="Expense saved"
+          onDismiss={handleToastDismiss}
+        />
       </View>
     </KeyboardAvoidingView>
   );
