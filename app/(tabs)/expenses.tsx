@@ -20,8 +20,14 @@ import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
 import { triggerLightImpact } from "@/src/utils/haptics";
 
 const ExpensesScreen = memo(() => {
-  const { expenses, isLoading, isSyncing, pendingSyncIds, deleteExpense, refresh } =
-    useExpenses();
+  const {
+    expenses,
+    isLoading,
+    isSyncing,
+    pendingSyncIds,
+    deleteExpense,
+    refresh,
+  } = useExpenses();
   const isOnline = useNetworkStatus();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -52,11 +58,9 @@ const ExpensesScreen = memo(() => {
   const handleExportCsv = useCallback(() => {
     triggerLightImpact();
     // Placeholder: export expenses as CSV (to be implemented)
-    Alert.alert(
-      "Export CSV",
-      "Export to CSV will be available soon.",
-      [{ text: "OK" }],
-    );
+    Alert.alert("Export CSV", "Export to CSV will be available soon.", [
+      { text: "OK" },
+    ]);
   }, []);
 
   const handleRefresh = useCallback(() => {
@@ -87,14 +91,32 @@ const ExpensesScreen = memo(() => {
   if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading expenses...</Text>
+        {!isOnline && (
+          <View style={styles.offlineBanner}>
+            <Ionicons name="cloud-offline-outline" size={18} color="#92400e" />
+            <Text style={styles.offlineBannerText}>
+              You're offline. Changes will sync when back online.
+            </Text>
+          </View>
+        )}
+        <View style={styles.loadingContent}>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={styles.loadingText}>Loading expenses...</Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      {!isOnline && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline-outline" size={18} color="#92400e" />
+          <Text style={styles.offlineBannerText}>
+            You're offline. Changes will sync when back online.
+          </Text>
+        </View>
+      )}
       <View style={styles.headerContainer}>
         <WelcomeMessage
           title="Expenses"
@@ -186,11 +208,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f9fafb",
   },
+  offlineBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#fef3c7",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#fcd34d",
+  },
+  offlineBannerText: {
+    fontSize: 13,
+    color: "#92400e",
+    fontWeight: "500",
+  },
   loadingContainer: {
+    flex: 1,
+    backgroundColor: "#f9fafb",
+  },
+  loadingContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9fafb",
   },
   loadingText: {
     marginTop: 16,
