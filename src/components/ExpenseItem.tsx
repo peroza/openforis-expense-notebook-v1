@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import type Expense from "@/src/types/Expense";
+import { formatRelativeDate } from "@/src/utils/formatRelativeDate";
 import { triggerLightImpact } from "@/src/utils/haptics";
 
 interface ExpenseItemProps {
@@ -37,6 +38,11 @@ const ExpenseItem = memo<ExpenseItemProps>(function ExpenseItem({
     [expense.title, expense.amount, isPendingSync],
   );
 
+  const formattedDate = useMemo(
+    () => formatRelativeDate(expense.date),
+    [expense.date],
+  );
+
   return (
     <Pressable
       onPress={handlePress}
@@ -61,7 +67,7 @@ const ExpenseItem = memo<ExpenseItemProps>(function ExpenseItem({
           </Text>
         )}
         <View style={styles.footer}>
-          <Text style={styles.date}>{expense.date}</Text>
+          <Text style={styles.date}>{formattedDate}</Text>
           {isPendingSync && (
             <View style={styles.pendingBadge}>
               <Ionicons
