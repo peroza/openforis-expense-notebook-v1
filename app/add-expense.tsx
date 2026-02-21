@@ -17,6 +17,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EXPENSE_CATEGORIES } from "@/src/constants/categories";
 import { useExpenses } from "@/src/context/ExpensesContext";
+import { triggerLightImpact } from "@/src/utils/haptics";
 import { parseAmountInput } from "@/src/utils/amount";
 
 const AddExpenseScreen = memo(() => {
@@ -63,6 +64,7 @@ const AddExpenseScreen = memo(() => {
   }, []);
 
   const handleSave = useCallback(async () => {
+    triggerLightImpact();
     if (!title.trim() || !amount.trim()) {
       Alert.alert("Validation Error", "Please fill in title and amount fields");
       return;

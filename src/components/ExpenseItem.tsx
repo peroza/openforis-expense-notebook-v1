@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import type Expense from "@/src/types/Expense";
+import { triggerLightImpact } from "@/src/utils/haptics";
 
 interface ExpenseItemProps {
   expense: Expense;
@@ -18,6 +19,7 @@ const ExpenseItem = memo<ExpenseItemProps>(function ExpenseItem({
   const router = useRouter();
 
   const handlePress = useCallback(() => {
+    triggerLightImpact();
     router.push({
       pathname: "/edit-expense",
       params: { id: expense.id },
@@ -25,6 +27,7 @@ const ExpenseItem = memo<ExpenseItemProps>(function ExpenseItem({
   }, [router, expense.id]);
 
   const handleLongPress = useCallback(() => {
+    triggerLightImpact();
     onDelete(expense.id);
   }, [onDelete, expense.id]);
 

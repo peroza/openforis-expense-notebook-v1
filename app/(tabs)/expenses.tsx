@@ -17,6 +17,7 @@ import ExpenseSummary from "@/src/components/ExpenseSummary";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useExpenses } from "@/src/context/ExpensesContext";
 import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
+import { triggerLightImpact } from "@/src/utils/haptics";
 
 const ExpensesScreen = memo(() => {
   const { expenses, isLoading, isSyncing, pendingSyncIds, deleteExpense, refresh } =
@@ -44,10 +45,12 @@ const ExpensesScreen = memo(() => {
   );
 
   const handleAddExpense = useCallback(() => {
+    triggerLightImpact();
     router.push("/add-expense");
   }, [router]);
 
   const handleExportCsv = useCallback(() => {
+    triggerLightImpact();
     // Placeholder: export expenses as CSV (to be implemented)
     Alert.alert(
       "Export CSV",
