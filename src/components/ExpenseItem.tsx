@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import type Expense from "@/src/types/Expense";
+import { getCategoryChipColors } from "@/src/constants/categories";
 import { formatRelativeDate } from "@/src/utils/formatRelativeDate";
 import { triggerLightImpact } from "@/src/utils/haptics";
 
@@ -43,6 +44,11 @@ const ExpenseItem = memo<ExpenseItemProps>(function ExpenseItem({
     [expense.date],
   );
 
+  const categoryColors = useMemo(
+    () => (expense.category ? getCategoryChipColors(expense.category) : null),
+    [expense.category],
+  );
+
   return (
     <Pressable
       onPress={handlePress}
@@ -55,8 +61,22 @@ const ExpenseItem = memo<ExpenseItemProps>(function ExpenseItem({
         <View style={styles.content}>
           <View style={styles.leftContent}>
             <Text style={styles.title}>{expense.title}</Text>
-            {expense.category && (
-              <Text style={styles.category}>{expense.category}</Text>
+            {expense.category && categoryColors && (
+              <View
+                style={[
+                  styles.categoryChip,
+                  { backgroundColor: categoryColors.bg },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    { color: categoryColors.text },
+                  ]}
+                >
+                  {expense.category}
+                </Text>
+              </View>
             )}
           </View>
           <Text style={styles.amount}>{expense.amount} €</Text>
@@ -114,10 +134,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  category: {
-    fontSize: 12,
-    color: "#6b7280",
+  categoryChip: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
     marginTop: 4,
+  },
+  categoryChipText: {
+    fontSize: 12,
+    fontWeight: "500",
   },
   amount: {
     fontSize: 18,
