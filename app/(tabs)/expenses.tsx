@@ -99,9 +99,22 @@ const ExpensesScreen = memo(() => {
             </Text>
           </View>
         )}
-        <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color="#2563eb" />
-          <Text style={styles.loadingText}>Loading expenses...</Text>
+        <View style={styles.skeletonList}>
+          {[1, 2, 3].map((i) => (
+            <View key={i} style={styles.skeletonCard}>
+              <View style={styles.skeletonRow}>
+                <View style={styles.skeletonLeft}>
+                  <View style={[styles.skeletonBlock, styles.skeletonTitle]} />
+                  <View style={[styles.skeletonBlock, styles.skeletonChip]} />
+                </View>
+                <View style={[styles.skeletonBlock, styles.skeletonAmount]} />
+              </View>
+              <View style={[styles.skeletonBlock, styles.skeletonNote]} />
+              <View style={styles.skeletonFooter}>
+                <View style={[styles.skeletonBlock, styles.skeletonDate]} />
+              </View>
+            </View>
+          ))}
         </View>
       </View>
     );
@@ -228,16 +241,55 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f9fafb",
   },
-  loadingContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  skeletonList: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#6b7280",
-    fontWeight: "500",
+  skeletonCard: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+  },
+  skeletonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  skeletonLeft: {
+    flex: 1,
+  },
+  skeletonBlock: {
+    backgroundColor: "#e5e7eb",
+    borderRadius: 4,
+  },
+  skeletonTitle: {
+    height: 16,
+    width: "70%",
+    marginBottom: 8,
+  },
+  skeletonChip: {
+    height: 22,
+    width: 72,
+    borderRadius: 12,
+  },
+  skeletonAmount: {
+    height: 18,
+    width: 56,
+  },
+  skeletonNote: {
+    height: 14,
+    width: "90%",
+    marginTop: 8,
+  },
+  skeletonFooter: {
+    flexDirection: "row",
+    marginTop: 8,
+  },
+  skeletonDate: {
+    height: 12,
+    width: 48,
   },
   headerContainer: {
     position: "relative",
