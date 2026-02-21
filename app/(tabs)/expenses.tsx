@@ -385,9 +385,15 @@ const ExpensesScreen = memo(() => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="receipt-outline" size={64} color="#d1d5db" />
-            <Text style={styles.emptyTitle}>No expenses yet</Text>
+            <Text style={styles.emptyTitle}>
+              {filterCategory === null
+                ? "No expenses yet"
+                : "No expenses in this category"}
+            </Text>
             <Text style={styles.emptySubtitle}>
-              Tap the button below to add your first expense
+              {filterCategory === null
+                ? "Tap the button below to add your first expense"
+                : "Try another category or clear the filter"}
             </Text>
           </View>
         }
