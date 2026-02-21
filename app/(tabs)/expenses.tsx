@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from "react";
+import React, { memo, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -9,11 +9,12 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import WelcomeMessage from "@/src/components/WelcomeMessage";
-import ExpenseItem from "@/src/components/ExpenseItem";
 import ExpenseSummary from "@/src/components/ExpenseSummary";
+import SwipeableExpenseRow from "@/src/components/SwipeableExpenseRow";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useExpenses } from "@/src/context/ExpensesContext";
 import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
@@ -31,6 +32,20 @@ const ExpensesScreen = memo(() => {
   const isOnline = useNetworkStatus();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const openSwipeableRef = useRef<InstanceType<typeof Swipeable> | null>(null);
+
+  const handleSwipeableOpen = useCallback(
+    (direction: "left" | "right", swipeable: InstanceType<typeof Swipeable>) => {
+      if (
+        openSwipeableRef.current &&
+        openSwipeableRef.current !== swipeable
+      ) {
+        openSwipeableRef.current.close();
+      }
+      openSwipeableRef.current = swipeable;
+    },
+    [],
+  );
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -69,13 +84,14 @@ const ExpensesScreen = memo(() => {
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof expenses)[0] }) => (
-      <ExpenseItem
+      <SwipeableExpenseRow
         expense={item}
         onDelete={handleDelete}
+        onSwipeableOpen={handleSwipeableOpen}
         isPendingSync={pendingSyncIds.has(item.id)}
       />
     ),
-    [handleDelete, pendingSyncIds],
+    [handleDelete, handleSwipeableOpen, pendingSyncIds],
   );
 
   const keyExtractor = useCallback((item: (typeof expenses)[0]) => item.id, []);
