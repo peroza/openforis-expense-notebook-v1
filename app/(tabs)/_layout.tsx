@@ -1,8 +1,12 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet } from "react-native";
+import { useExpenses } from "@/src/context/ExpensesContext";
 
 export default function TabsLayout() {
+  const { pendingSyncIds } = useExpenses();
+  const pendingCount = pendingSyncIds.size;
+
   return (
     <Tabs
       screenOptions={{
@@ -19,6 +23,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="receipt-outline" size={size} color={color} />
           ),
+          tabBarBadge: pendingCount > 0 ? pendingCount : undefined,
         }}
       />
       <Tabs.Screen
