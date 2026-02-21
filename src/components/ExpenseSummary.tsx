@@ -1,16 +1,31 @@
+import React, { memo, useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import type Expense from "@/src/types/Expense";
 
-type ExpenseSummaryProps = {
+interface ExpenseSummaryProps {
   expenses: Expense[];
-};
+}
 
-export default function ExpenseSummary({ expenses }: ExpenseSummaryProps) {
-  const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+const ExpenseSummary = memo<ExpenseSummaryProps>(function ExpenseSummary({
+  expenses,
+}) {
+  const total = useMemo(
+    () => expenses.reduce((sum, exp) => sum + exp.amount, 0),
+    [expenses],
+  );
   const count = expenses.length;
 
+  const accessibilityLabel = useMemo(
+    () => `Summary: ${count} expenses, total ${total.toFixed(2)} euros`,
+    [count, total],
+  );
+
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="text"
+    >
       <View style={styles.row}>
         <Text style={styles.label}>Total Expenses:</Text>
         <Text style={styles.amount}>{total.toFixed(2)} €</Text>
@@ -21,7 +36,11 @@ export default function ExpenseSummary({ expenses }: ExpenseSummaryProps) {
       </View>
     </View>
   );
-}
+});
+
+ExpenseSummary.displayName = "ExpenseSummary";
+
+export default ExpenseSummary;
 
 const styles = StyleSheet.create({
   container: {
@@ -30,6 +49,13 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     marginHorizontal: 32,
+    borderLeftWidth: 4,
+    borderLeftColor: "#2563eb",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   row: {
     flexDirection: "row",
