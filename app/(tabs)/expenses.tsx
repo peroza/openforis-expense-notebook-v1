@@ -144,6 +144,41 @@ const ExpensesScreen = memo(() => {
     [filteredAndSortedExpenses.length],
   );
 
+  const listEmptyComponent = useMemo(
+    () => (
+      <View style={styles.emptyContainer}>
+        <Ionicons name="receipt-outline" size={64} color="#d1d5db" />
+        <Text style={styles.emptyTitle}>
+          {filterCategory === null
+            ? "No expenses yet"
+            : "No expenses in this category"}
+        </Text>
+        <Text style={styles.emptySubtitle}>
+          {filterCategory === null
+            ? "Tap the button below to add your first expense"
+            : "Try another category or clear the filter"}
+        </Text>
+        {filterCategory === null && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.addButton,
+              styles.emptyStateCtaButton,
+              pressed && styles.emptyStateCtaButtonPressed,
+            ]}
+            onPress={handleAddExpense}
+            accessibilityLabel="Add your first expense"
+            accessibilityRole="button"
+            accessibilityHint="Opens the form to add a new expense"
+          >
+            <Ionicons name="add-circle" size={24} color="#ffffff" />
+            <Text style={styles.addButtonText}>Add your first expense</Text>
+          </Pressable>
+        )}
+      </View>
+    ),
+    [filterCategory, handleAddExpense],
+  );
+
   if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
@@ -238,21 +273,7 @@ const ExpensesScreen = memo(() => {
             colors={["#2563eb"]}
           />
         }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="receipt-outline" size={64} color="#d1d5db" />
-            <Text style={styles.emptyTitle}>
-              {filterCategory === null
-                ? "No expenses yet"
-                : "No expenses in this category"}
-            </Text>
-            <Text style={styles.emptySubtitle}>
-              {filterCategory === null
-                ? "Tap the button below to add your first expense"
-                : "Try another category or clear the filter"}
-            </Text>
-          </View>
-        }
+        ListEmptyComponent={listEmptyComponent}
       />
 
       <View style={styles.addButtonFooter}>
@@ -488,5 +509,12 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     textAlign: "center",
     lineHeight: 20,
+  },
+  emptyStateCtaButton: {
+    flex: 0,
+    marginTop: 24,
+  },
+  emptyStateCtaButtonPressed: {
+    opacity: 0.9,
   },
 });
