@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useRef } from "react";
+import React, { memo, useCallback, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useExpenses } from "@/src/context/ExpensesContext";
 import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
 import { triggerLightImpact } from "@/src/utils/haptics";
+import type Expense from "@/src/types/Expense";
+
+export type SortOption =
+  | "date-desc"
+  | "date-asc"
+  | "amount-desc"
+  | "amount-asc"
+  | "title-asc";
 
 const ExpensesScreen = memo(() => {
   const {
@@ -33,6 +41,35 @@ const ExpensesScreen = memo(() => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const openSwipeableRef = useRef<InstanceType<typeof Swipeable> | null>(null);
+
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState<SortOption>("date-desc");
+
+  const filteredAndSortedExpenses = useMemo(() => {
+    let list: Expense[] =
+      filterCategory === null
+        ? expenses
+        : expenses.filter((e) => e.category === filterCategory);
+    list = list.slice();
+    switch (sortOption) {
+      case "date-desc":
+        list.sort((a, b) => b.date.localeCompare(a.date));
+        break;
+      case "date-asc":
+        list.sort((a, b) => a.date.localeCompare(b.date));
+        break;
+      case "amount-desc":
+        list.sort((a, b) => b.amount - a.amount);
+        break;
+      case "amount-asc":
+        list.sort((a, b) => a.amount - b.amount);
+        break;
+      case "title-asc":
+        list.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+    }
+    return list;
+  }, [expenses, filterCategory, sortOption]);
 
   const handleSwipeableOpen = useCallback(
     (direction: "left" | "right", swipeable: InstanceType<typeof Swipeable>) => {
@@ -99,9 +136,9 @@ const ExpensesScreen = memo(() => {
   const listContentStyle = useMemo(
     () => [
       styles.listContent,
-      expenses.length === 0 && styles.listContentEmpty,
+      filteredAndSortedExpenses.length === 0 && styles.listContentEmpty,
     ],
-    [expenses.length],
+    [filteredAndSortedExpenses.length],
   );
 
   if (isLoading) {
@@ -172,11 +209,11 @@ const ExpensesScreen = memo(() => {
       )}
 
       <View style={styles.summaryWrapper}>
-        <ExpenseSummary expenses={expenses} />
+        <ExpenseSummary expenses={filteredAndSortedExpenses} />
       </View>
 
       <FlatList
-        data={expenses}
+        data={filteredAndSortedExpenses}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         style={styles.list}
