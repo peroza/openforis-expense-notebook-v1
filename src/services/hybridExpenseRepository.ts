@@ -22,21 +22,28 @@ export class HybridExpenseRepository implements ExpenseRepository {
     this.isOnline = isOnline;
   }
 
-  // Merge expenses: local takes precedence, then merge remote
-  private mergeExpenses(local: Expense[], remote: Expense[]): Expense[] {
+  // Merge expenses: remote is source of truth so other devices' updates are visible.
+  // Overwrite with local only for expenses that have a pending sync (this device's uncommitted change).
+  private async mergeExpenses(
+    local: Expense[],
+    remote: Expense[],
+    pendingIds: Set<string>
+  ): Promise<Expense[]> {
     const merged = new Map<string, Expense>();
-    
-    // Add remote expenses first
+
+    // Start with remote (so we see updates from other devices)
     remote.forEach((expense) => {
       merged.set(expense.id, expense);
     });
-    
-    // Overwrite with local expenses (local is source of truth)
+
+    // Overwrite with local only for ids that have a pending create/update on this device
     local.forEach((expense) => {
-      merged.set(expense.id, expense);
+      if (pendingIds.has(expense.id)) {
+        merged.set(expense.id, expense);
+      }
     });
-    
-    return Array.from(merged.values()).sort((a, b) => 
+
+    return Array.from(merged.values()).sort((a, b) =>
       b.date.localeCompare(a.date)
     );
   }
@@ -44,13 +51,14 @@ export class HybridExpenseRepository implements ExpenseRepository {
   async list(): Promise<Expense[]> {
     // Always read from local first (instant, offline-capable)
     const local = await this.localRepo.list();
-    
+
     // If online and Firestore is available, merge with remote
     if (this.isOnline && this.remoteRepo) {
       try {
         const remote = await this.remoteRepo.list();
-        const merged = this.mergeExpenses(local, remote);
-        // Update local with merged data
+        const pendingIds = new Set(await this.getPendingSyncExpenseIds());
+        const merged = await this.mergeExpenses(local, remote, pendingIds);
+        // Update local with merged data so next read is up to date
         await this.localRepo.replaceAll(merged);
         return merged;
       } catch (error) {
@@ -58,7 +66,7 @@ export class HybridExpenseRepository implements ExpenseRepository {
         return local;
       }
     }
-    
+
     return local;
   }
 
@@ -177,9 +185,6 @@ export class HybridExpenseRepository implements ExpenseRepository {
           }
           case "update": {
             const exp = operation.expense;
-            // #region agent log
-            fetch('http://127.0.0.1:7268/ingest/c6b46800-239b-49b2-9a12-99b776a19fb0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d33332'},body:JSON.stringify({sessionId:'d33332',location:'hybridExpenseRepository.ts:processSyncQueue:update',message:'update op expense',data:{amount:exp.amount,typeofAmount:typeof exp.amount,id:exp.id},timestamp:Date.now(),runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-            // #endregion
             const amount = Number(exp.amount);
             if (!Number.isFinite(amount) || amount <= 0) {
               console.warn(`Skipping update for expense ${exp.id}: invalid amount`, exp.amount);
