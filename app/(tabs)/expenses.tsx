@@ -47,6 +47,15 @@ const ExpensesScreen = memo(() => {
     router.push("/add-expense");
   }, [router]);
 
+  const handleExportCsv = useCallback(() => {
+    // Placeholder: export expenses as CSV (to be implemented)
+    Alert.alert(
+      "Export CSV",
+      "Export to CSV will be available soon.",
+      [{ text: "OK" }],
+    );
+  }, []);
+
   const handleRefresh = useCallback(() => {
     void refresh();
   }, [refresh]);
@@ -135,16 +144,27 @@ const ExpensesScreen = memo(() => {
       />
 
       <View style={styles.addButtonFooter}>
-        <Pressable
-          onPress={handleAddExpense}
-          style={styles.addButton}
-          accessibilityLabel="Add new expense"
-          accessibilityRole="button"
-          accessibilityHint="Opens the form to add a new expense"
-        >
-          <Ionicons name="add-circle" size={24} color="#ffffff" />
-          <Text style={styles.addButtonText}>Add New Expense</Text>
-        </Pressable>
+        <View style={styles.footerRow}>
+          <Pressable
+            onPress={handleAddExpense}
+            style={styles.addButton}
+            accessibilityLabel="Add new expense"
+            accessibilityRole="button"
+            accessibilityHint="Opens the form to add a new expense"
+          >
+            <Ionicons name="add-circle" size={24} color="#ffffff" />
+            <Text style={styles.addButtonText}>Add New Expense</Text>
+          </Pressable>
+          <Pressable
+            onPress={handleExportCsv}
+            style={styles.exportButton}
+            accessibilityLabel="Export expenses as CSV"
+            accessibilityRole="button"
+            accessibilityHint="Exports expense list as a CSV file"
+          >
+            <Ionicons name="document-text-outline" size={22} color="#374151" />
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -220,7 +240,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
   },
+  footerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   addButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -243,6 +269,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     letterSpacing: 0.5,
+  },
+  exportButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   list: {
     flex: 1,
