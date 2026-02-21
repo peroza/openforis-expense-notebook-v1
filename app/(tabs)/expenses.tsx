@@ -131,6 +131,11 @@ const ExpensesScreen = memo(() => {
 
   const keyExtractor = useCallback((item: (typeof expenses)[0]) => item.id, []);
 
+  const itemSeparator = useCallback(
+    () => <View style={styles.listItemSeparator} />,
+    [],
+  );
+
   const listContentStyle = useMemo(
     () => [
       styles.listContent,
@@ -221,6 +226,7 @@ const ExpensesScreen = memo(() => {
         data={filteredAndSortedExpenses}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
+        ItemSeparatorComponent={itemSeparator}
         style={styles.list}
         contentContainerStyle={listContentStyle}
         showsVerticalScrollIndicator={false}
@@ -451,6 +457,10 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+  },
+  listItemSeparator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#e5e7eb",
   },
   listContent: {
     paddingHorizontal: 20,
