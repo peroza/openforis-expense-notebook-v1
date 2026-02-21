@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { useRouter } from "expo-router";
@@ -20,6 +21,10 @@ import { useExpenses } from "@/src/context/ExpensesContext";
 import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
 import { triggerLightImpact } from "@/src/utils/haptics";
 import type Expense from "@/src/types/Expense";
+import {
+  EXPENSE_CATEGORIES,
+  getCategoryChipColors,
+} from "@/src/constants/categories";
 
 export type SortOption =
   | "date-desc"
@@ -119,6 +124,11 @@ const ExpensesScreen = memo(() => {
     void refresh();
   }, [refresh]);
 
+  const handleFilterSelect = useCallback((category: string | null) => {
+    triggerLightImpact();
+    setFilterCategory(category);
+  }, []);
+
   const renderItem = useCallback(
     ({ item }: { item: (typeof expenses)[0] }) => (
       <SwipeableExpenseRow
@@ -207,6 +217,62 @@ const ExpensesScreen = memo(() => {
           <Text style={styles.syncText}>Syncing with server...</Text>
         </View>
       )}
+
+      <View style={styles.filterBar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterChipsContent}
+        >
+          <Pressable
+            style={[
+              styles.filterChip,
+              filterCategory === null && styles.filterChipSelectedAll,
+            ]}
+            onPress={() => handleFilterSelect(null)}
+            accessibilityLabel="Show all categories"
+            accessibilityRole="button"
+            accessibilityState={{ selected: filterCategory === null }}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                filterCategory === null && styles.filterChipTextSelectedAll,
+              ]}
+            >
+              All
+            </Text>
+          </Pressable>
+          {EXPENSE_CATEGORIES.map((category) => {
+            const isSelected = filterCategory === category;
+            const colors = getCategoryChipColors(category);
+            return (
+              <Pressable
+                key={category}
+                style={[
+                  styles.filterChip,
+                  isSelected && {
+                    backgroundColor: colors.bg,
+                  },
+                ]}
+                onPress={() => handleFilterSelect(category)}
+                accessibilityLabel={`Filter by ${category}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    isSelected ? { color: colors.text } : styles.filterChipTextUnselected,
+                  ]}
+                >
+                  {category}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       <View style={styles.summaryWrapper}>
         <ExpenseSummary expenses={filteredAndSortedExpenses} />
@@ -382,8 +448,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
   },
+  filterBar: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  filterChipsContent: {
+    flexDirection: "row",
+    gap: 8,
+    paddingVertical: 4,
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "#f3f4f6",
+  },
+  filterChipSelectedAll: {
+    backgroundColor: "#2563eb",
+  },
+  filterChipText: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  filterChipTextSelectedAll: {
+    color: "#ffffff",
+  },
+  filterChipTextUnselected: {
+    color: "#6b7280",
+  },
   summaryWrapper: {
-    marginTop: 24,
+    marginTop: 12,
   },
   addButtonFooter: {
     paddingHorizontal: 20,
