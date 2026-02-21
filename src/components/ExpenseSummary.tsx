@@ -1,6 +1,14 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useMemo, useEffect, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import type Expense from "@/src/types/Expense";
+
+const FADE_DURATION_MS = 180;
 
 interface ExpenseSummaryProps {
   expenses: Expense[];
@@ -15,6 +23,39 @@ const ExpenseSummary = memo<ExpenseSummaryProps>(function ExpenseSummary({
   );
   const count = expenses.length;
 
+  const amountOpacity = useSharedValue(1);
+  const countOpacity = useSharedValue(1);
+  const prevTotalRef = useRef(total);
+  const prevCountRef = useRef(count);
+
+  useEffect(() => {
+    if (prevTotalRef.current !== total) {
+      prevTotalRef.current = total;
+      amountOpacity.value = withSequence(
+        withTiming(0.35, { duration: FADE_DURATION_MS / 2 }),
+        withTiming(1, { duration: FADE_DURATION_MS }),
+      );
+    }
+  }, [total, amountOpacity]);
+
+  useEffect(() => {
+    if (prevCountRef.current !== count) {
+      prevCountRef.current = count;
+      countOpacity.value = withSequence(
+        withTiming(0.35, { duration: FADE_DURATION_MS / 2 }),
+        withTiming(1, { duration: FADE_DURATION_MS }),
+      );
+    }
+  }, [count, countOpacity]);
+
+  const animatedAmountStyle = useAnimatedStyle(() => ({
+    opacity: amountOpacity.value,
+  }));
+
+  const animatedCountStyle = useAnimatedStyle(() => ({
+    opacity: countOpacity.value,
+  }));
+
   const accessibilityLabel = useMemo(
     () => `Summary: ${count} expenses, total ${total.toFixed(2)} euros`,
     [count, total],
@@ -28,11 +69,15 @@ const ExpenseSummary = memo<ExpenseSummaryProps>(function ExpenseSummary({
     >
       <View style={styles.row}>
         <Text style={styles.label}>Total Expenses:</Text>
-        <Text style={styles.amount}>{total.toFixed(2)} €</Text>
+        <Animated.View style={animatedAmountStyle}>
+          <Text style={styles.amount}>{total.toFixed(2)} €</Text>
+        </Animated.View>
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>Count:</Text>
-        <Text style={styles.count}>{count}</Text>
+        <Animated.View style={animatedCountStyle}>
+          <Text style={styles.count}>{count}</Text>
+        </Animated.View>
       </View>
     </View>
   );
