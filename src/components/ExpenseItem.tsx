@@ -49,15 +49,24 @@ const ExpenseItem = memo<ExpenseItemProps>(function ExpenseItem({
     [expense.category],
   );
 
+  const cardStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.card,
+      pressed && styles.cardPressed,
+    ],
+    [],
+  );
+
   return (
     <Pressable
+      style={cardStyle}
       onPress={handlePress}
       onLongPress={handleLongPress}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       accessibilityHint="Tap to edit, long press to delete"
     >
-      <View style={styles.card}>
+      <View>
         <View style={styles.content}>
           <View style={styles.leftContent}>
             <Text style={styles.title}>{expense.title}</Text>
@@ -120,6 +129,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  cardPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.98 }],
   },
   content: {
     flexDirection: "row",
