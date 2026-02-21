@@ -9,6 +9,7 @@ import {
   Pressable,
   ActivityIndicator,
   ScrollView,
+  Modal,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { useRouter } from "expo-router";
@@ -33,6 +34,14 @@ export type SortOption =
   | "amount-asc"
   | "title-asc";
 
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "date-desc", label: "Date (newest)" },
+  { value: "date-asc", label: "Date (oldest)" },
+  { value: "amount-desc", label: "Amount (high)" },
+  { value: "amount-asc", label: "Amount (low)" },
+  { value: "title-asc", label: "Title (A–Z)" },
+];
+
 const ExpensesScreen = memo(() => {
   const {
     expenses,
@@ -49,6 +58,7 @@ const ExpensesScreen = memo(() => {
 
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<SortOption>("date-desc");
+  const [showSortModal, setShowSortModal] = useState(false);
 
   const filteredAndSortedExpenses = useMemo(() => {
     let list: Expense[] =
@@ -128,6 +138,17 @@ const ExpensesScreen = memo(() => {
     triggerLightImpact();
     setFilterCategory(category);
   }, []);
+
+  const handleSortSelect = useCallback((option: SortOption) => {
+    triggerLightImpact();
+    setSortOption(option);
+    setShowSortModal(false);
+  }, []);
+
+  const sortLabel = useMemo(
+    () => SORT_OPTIONS.find((o) => o.value === sortOption)?.label ?? "Date (newest)",
+    [sortOption],
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof expenses)[0] }) => (
@@ -272,7 +293,75 @@ const ExpensesScreen = memo(() => {
             );
           })}
         </ScrollView>
+        <Pressable
+          style={styles.sortButton}
+          onPress={() => {
+            triggerLightImpact();
+            setShowSortModal(true);
+          }}
+          accessibilityLabel={`Sort: ${sortLabel}. Tap to change sort order.`}
+          accessibilityRole="button"
+        >
+          <Ionicons name="swap-vertical" size={18} color="#2563eb" />
+          <Text style={styles.sortButtonText}>{sortLabel}</Text>
+          <Ionicons name="chevron-down" size={16} color="#6b7280" />
+        </Pressable>
       </View>
+
+      <Modal
+        visible={showSortModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSortModal(false)}
+      >
+        <Pressable
+          style={styles.sortModalBackdrop}
+          onPress={() => setShowSortModal(false)}
+          accessibilityLabel="Close sort options"
+        >
+          <Pressable
+            style={styles.sortModalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.sortModalHeader}>
+              <Text style={styles.sortModalTitle}>Sort by</Text>
+              <Pressable
+                onPress={() => setShowSortModal(false)}
+                style={styles.sortModalClose}
+                accessibilityLabel="Close"
+                accessibilityRole="button"
+              >
+                <Ionicons name="close" size={24} color="#6b7280" />
+              </Pressable>
+            </View>
+            {SORT_OPTIONS.map(({ value, label }) => (
+              <Pressable
+                key={value}
+                style={[
+                  styles.sortOptionRow,
+                  sortOption === value && styles.sortOptionRowSelected,
+                ]}
+                onPress={() => handleSortSelect(value)}
+                accessibilityLabel={label}
+                accessibilityRole="button"
+                accessibilityState={{ selected: sortOption === value }}
+              >
+                <Text
+                  style={[
+                    styles.sortOptionText,
+                    sortOption === value && styles.sortOptionTextSelected,
+                  ]}
+                >
+                  {label}
+                </Text>
+                {sortOption === value && (
+                  <Ionicons name="checkmark" size={22} color="#2563eb" />
+                )}
+              </Pressable>
+            ))}
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <View style={styles.summaryWrapper}>
         <ExpenseSummary expenses={filteredAndSortedExpenses} />
@@ -451,12 +540,13 @@ const styles = StyleSheet.create({
   filterBar: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 4,
+    paddingBottom: 8,
   },
   filterChipsContent: {
     flexDirection: "row",
     gap: 8,
     paddingVertical: 4,
+    marginBottom: 8,
   },
   filterChip: {
     paddingHorizontal: 14,
@@ -476,6 +566,68 @@ const styles = StyleSheet.create({
   },
   filterChipTextUnselected: {
     color: "#6b7280",
+  },
+  sortButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  sortButtonText: {
+    fontSize: 13,
+    color: "#374151",
+    fontWeight: "500",
+  },
+  sortModalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  sortModalContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    width: "100%",
+    maxWidth: 320,
+  },
+  sortModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  sortModalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  sortModalClose: {
+    padding: 4,
+  },
+  sortOptionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  sortOptionRowSelected: {
+    backgroundColor: "#eff6ff",
+  },
+  sortOptionText: {
+    fontSize: 16,
+    color: "#374151",
+  },
+  sortOptionTextSelected: {
+    color: "#2563eb",
+    fontWeight: "600",
   },
   summaryWrapper: {
     marginTop: 12,
