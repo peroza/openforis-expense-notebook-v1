@@ -1,24 +1,47 @@
+import React, { memo, useCallback, useMemo } from "react";
 import { Text, View, StyleSheet, Pressable } from "react-native";
-import type Expense from "@/src/types/Expense";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import type Expense from "@/src/types/Expense";
 
-type ExpenseItemProps = {
+interface ExpenseItemProps {
   expense: Expense;
   onDelete: (id: string) => void;
-};
+  isPendingSync?: boolean;
+}
 
-export default function ExpenseItem({ expense, onDelete }: ExpenseItemProps) {
+const ExpenseItem = memo<ExpenseItemProps>(function ExpenseItem({
+  expense,
+  onDelete,
+  isPendingSync = false,
+}) {
   const router = useRouter();
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     router.push({
       pathname: "/edit-expense",
       params: { id: expense.id },
     });
-  };
+  }, [router, expense.id]);
+
+  const handleLongPress = useCallback(() => {
+    onDelete(expense.id);
+  }, [onDelete, expense.id]);
+
+  const accessibilityLabel = useMemo(
+    () =>
+      `${expense.title}, ${expense.amount} euros${isPendingSync ? ", pending sync with server" : ""}`,
+    [expense.title, expense.amount, isPendingSync],
+  );
 
   return (
-    <Pressable onPress={handlePress} onLongPress={() => onDelete(expense.id)}>
+    <Pressable
+      onPress={handlePress}
+      onLongPress={handleLongPress}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityHint="Tap to edit, long press to delete"
+    >
       <View style={styles.card}>
         <View style={styles.content}>
           <View style={styles.leftContent}>
@@ -34,11 +57,28 @@ export default function ExpenseItem({ expense, onDelete }: ExpenseItemProps) {
             {expense.note}
           </Text>
         )}
-        <Text style={styles.date}>{expense.date}</Text>
+        <View style={styles.footer}>
+          <Text style={styles.date}>{expense.date}</Text>
+          {isPendingSync && (
+            <View style={styles.pendingBadge}>
+              <Ionicons
+                name="cloud-upload-outline"
+                size={14}
+                color="#d97706"
+                style={styles.pendingIcon}
+              />
+              <Text style={styles.pendingText}>Pending sync</Text>
+            </View>
+          )}
+        </View>
       </View>
     </Pressable>
   );
-}
+});
+
+ExpenseItem.displayName = "ExpenseItem";
+
+export default ExpenseItem;
 
 const styles = StyleSheet.create({
   card: {
@@ -50,7 +90,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3, // Android shadow
+    elevation: 3,
   },
   content: {
     flexDirection: "row",
@@ -58,18 +98,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
+  leftContent: {
+    flex: 1,
+  },
   title: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  category: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginTop: 4,
   },
   amount: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#2563eb",
   },
-  date: {
-    fontSize: 12,
+  note: {
+    fontSize: 14,
     color: "#6b7280",
+    marginTop: 8,
+    fontStyle: "italic",
   },
   footer: {
     flexDirection: "row",
@@ -77,28 +127,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
-  deleteButton: {
-    padding: 8,
-    backgroundColor: "#ef4444",
-    borderRadius: 4,
-  },
-  deleteText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  leftContent: {
-    flex: 1,
-  },
-  category: {
+  date: {
     fontSize: 12,
     color: "#6b7280",
-    marginTop: 4,
   },
-  note: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginTop: 8,
-    fontStyle: "italic",
+  pendingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef3c7",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  pendingIcon: {
+    marginRight: 4,
+  },
+  pendingText: {
+    fontSize: 11,
+    color: "#d97706",
+    fontWeight: "500",
   },
 });

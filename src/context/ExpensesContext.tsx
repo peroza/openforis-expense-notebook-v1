@@ -17,6 +17,7 @@ type ExpensesContextValue = {
   expenses: Expense[];
   isLoading: boolean;
   isSyncing: boolean;
+  pendingSyncIds: Set<string>;
   refresh: () => Promise<void>;
   addExpense: (input: AddExpenseInput) => Promise<void>;
   updateExpense: (expense: Expense) => Promise<void>;
@@ -71,6 +72,7 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [pendingSyncIds, setPendingSyncIds] = useState<Set<string>>(new Set());
   const isSyncingRef = useRef(false);
 
   const refresh = useCallback(async () => {
@@ -84,6 +86,8 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
       console.log("🔄 Starting refresh...");
       const list = await repository.list();
       setExpenses(list);
+      const ids = await repository.getPendingSyncExpenseIds();
+      setPendingSyncIds(new Set(ids));
       console.log("✅ Refresh completed");
     } catch (error) {
       console.error("❌ Error refreshing expenses:", error);
@@ -119,6 +123,8 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
         } else {
           setExpenses(list);
         }
+        const ids = await repository.getPendingSyncExpenseIds();
+        setPendingSyncIds(new Set(ids));
       } catch (error) {
         console.error("Error bootstrapping expenses:", error);
       } finally {
@@ -165,6 +171,7 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
       expenses,
       isLoading,
       isSyncing,
+      pendingSyncIds,
       refresh,
       addExpense,
       updateExpense,
@@ -175,6 +182,7 @@ export function ExpensesProvider({ children }: { children: React.ReactNode }) {
       expenses,
       isLoading,
       isSyncing,
+      pendingSyncIds,
       refresh,
       addExpense,
       updateExpense,

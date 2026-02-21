@@ -19,7 +19,7 @@ import { useExpenses } from "@/src/context/ExpensesContext";
 import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
 
 const ExpensesScreen = memo(() => {
-  const { expenses, isLoading, isSyncing, deleteExpense, refresh } =
+  const { expenses, isLoading, isSyncing, pendingSyncIds, deleteExpense, refresh } =
     useExpenses();
   const isOnline = useNetworkStatus();
   const router = useRouter();
@@ -62,9 +62,13 @@ const ExpensesScreen = memo(() => {
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof expenses)[0] }) => (
-      <ExpenseItem expense={item} onDelete={handleDelete} />
+      <ExpenseItem
+        expense={item}
+        onDelete={handleDelete}
+        isPendingSync={pendingSyncIds.has(item.id)}
+      />
     ),
-    [handleDelete],
+    [handleDelete, pendingSyncIds],
   );
 
   const keyExtractor = useCallback((item: (typeof expenses)[0]) => item.id, []);

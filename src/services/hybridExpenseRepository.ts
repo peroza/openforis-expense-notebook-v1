@@ -135,6 +135,18 @@ export class HybridExpenseRepository implements ExpenseRepository {
     }
   }
 
+  /** Returns expense IDs that are in the sync queue (create or update pending). */
+  async getPendingSyncExpenseIds(): Promise<string[]> {
+    const queue = await this.syncQueue.getQueue();
+    const ids: string[] = [];
+    for (const op of queue) {
+      if (op.type === "create" || op.type === "update") {
+        ids.push(op.expense.id);
+      }
+    }
+    return ids;
+  }
+
   // Sync queued operations when coming back online
   async processSyncQueue(): Promise<void> {
     if (!this.isOnline || !this.remoteRepo) {
