@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
+  Share,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { useRouter } from "expo-router";
@@ -18,10 +19,12 @@ import ExpenseFilterSortBar, {
   type SortOption,
 } from "@/src/components/ExpenseFilterSortBar";
 import SwipeableExpenseRow from "@/src/components/SwipeableExpenseRow";
+import SuccessToast from "@/src/components/SuccessToast";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useExpenses } from "@/src/context/ExpensesContext";
 import { useNetworkStatus } from "@/src/hooks/useNetworkStatus";
 import { triggerLightImpact } from "@/src/utils/haptics";
+import { expensesToCsv } from "@/src/utils/expenseCsv";
 import type Expense from "@/src/types/Expense";
 
 export type { SortOption } from "@/src/components/ExpenseFilterSortBar";
@@ -42,6 +45,7 @@ const ExpensesScreen = memo(() => {
 
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<SortOption>("date-desc");
+  const [showExportToast, setShowExportToast] = useState(false);
 
   const filteredAndSortedExpenses = useMemo(() => {
     let list: Expense[] =
@@ -105,12 +109,34 @@ const ExpensesScreen = memo(() => {
     router.push("/add-expense");
   }, [router]);
 
-  const handleExportCsv = useCallback(() => {
+  const handleExportCsv = useCallback(async () => {
     triggerLightImpact();
-    // Placeholder: export expenses as CSV (to be implemented)
-    Alert.alert("Export CSV", "Export to CSV will be available soon.", [
-      { text: "OK" },
-    ]);
+    if (filteredAndSortedExpenses.length === 0) {
+      Alert.alert(
+        "No expenses to export",
+        "Add expenses first, or clear the category filter.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+    const csv = expensesToCsv(filteredAndSortedExpenses);
+    try {
+      await Share.share({
+        message: csv,
+        title: "Expenses export",
+      });
+      setShowExportToast(true);
+    } catch {
+      Alert.alert(
+        "Export failed",
+        "Could not open share. Please try again.",
+        [{ text: "OK" }],
+      );
+    }
+  }, [filteredAndSortedExpenses]);
+
+  const handleExportToastDismiss = useCallback(() => {
+    setShowExportToast(false);
   }, []);
 
   const handleRefresh = useCallback(() => {
@@ -299,6 +325,11 @@ const ExpensesScreen = memo(() => {
           </Pressable>
         </View>
       </View>
+      <SuccessToast
+        visible={showExportToast}
+        message="Export complete"
+        onDismiss={handleExportToastDismiss}
+      />
     </View>
   );
 });
