@@ -55,25 +55,27 @@ function RootLayoutNav() {
     );
   }
 
+  // Initialize posts repository (only when user exists, for PostsProvider)
+  const postsRepository = React.useMemo(
+    () => (user ? new FirestorePostsRepository() : null),
+    [user],
+  );
+
   if (!user) {
     return (
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      />
+      <ExpensesProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        />
+      </ExpensesProvider>
     );
   }
 
-  // Initialize posts repository
-  const postsRepository = React.useMemo(
-    () => new FirestorePostsRepository(),
-    [],
-  );
-
   return (
     <ExpensesProvider>
-      <PostsProvider repository={postsRepository}>
+      <PostsProvider repository={postsRepository!}>
         <Stack
           screenOptions={{
             headerShown: false,
