@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#2563eb",
+    color: "#094d89",
   },
   note: {
     fontSize: 14,

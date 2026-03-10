@@ -279,7 +279,7 @@ const AddExpenseScreen = memo(() => {
                 accessibilityRole="button"
                 accessibilityHint="Opens date picker"
               >
-                <Ionicons name="calendar-outline" size={20} color="#2563eb" />
+                <Ionicons name="calendar-outline" size={20} color="#094d89" />
                 <Text style={styles.dateDisplay}>{formattedDate}</Text>
               </Pressable>
             </View>
@@ -425,15 +425,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   pickerButtonSelected: {
-    borderColor: "#2563eb",
-    backgroundColor: "#eff6ff",
+    borderColor: "#094d89",
+    backgroundColor: "#e5f0fb",
   },
   pickerText: {
     fontSize: 16,
     color: "#6b7280",
   },
   pickerTextSelected: {
-    color: "#2563eb",
+    color: "#094d89",
     fontWeight: "500",
   },
   dateButton: {
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   },
   dateDisplay: {
     fontSize: 16,
-    color: "#2563eb",
+    color: "#094d89",
     fontWeight: "500",
   },
   noteInput: {
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
   categoryOptionTextSelected: {
-    color: "#1976d2",
+    color: "#094d89",
     fontWeight: "600",
   },
   footer: {
@@ -549,12 +549,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#2563eb",
+    backgroundColor: "#094d89",
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 12,
     gap: 8,
-    shadowColor: "#2563eb",
+    shadowColor: "#094d89",
     shadowOffset: {
       width: 0,
       height: 4,

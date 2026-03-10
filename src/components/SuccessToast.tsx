@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   toast: {
-    backgroundColor: "#059669",
+    backgroundColor: "#99bf5d",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   text: {
-    color: "#ffffff",
+    color: "#1f2933",
     fontSize: 15,
     fontWeight: "600",
   },

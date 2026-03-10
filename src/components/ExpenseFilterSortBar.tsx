@@ -135,7 +135,7 @@ const ExpenseFilterSortBar = memo<ExpenseFilterSortBarProps>(
           accessibilityLabel={`Sort: ${sortLabel}. Tap to change sort order.`}
           accessibilityRole="button"
         >
-          <Ionicons name="swap-vertical" size={18} color="#2563eb" />
+          <Ionicons name="swap-vertical" size={18} color="#094d89" />
           <Text style={styles.sortButtonText}>{sortLabel}</Text>
           <Ionicons name="chevron-down" size={16} color="#6b7280" />
         </Pressable>
@@ -188,7 +188,7 @@ const ExpenseFilterSortBar = memo<ExpenseFilterSortBarProps>(
                   {label}
                 </Text>
                 {sortOption === value && (
-                  <Ionicons name="checkmark" size={22} color="#2563eb" />
+                  <Ionicons name="checkmark" size={22} color="#094d89" />
                 )}
               </Pressable>
             ))}
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   },
   sortButtonText: {
     fontSize: 13,
-    color: "#374151",
+    color: "#094d89",
     fontWeight: "500",
   },
   sortModalBackdrop: {
@@ -287,14 +287,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   sortOptionRowSelected: {
-    backgroundColor: "#eff6ff",
+    backgroundColor: "#e5f0fb",
   },
   sortOptionText: {
     fontSize: 16,
     color: "#374151",
   },
   sortOptionTextSelected: {
-    color: "#2563eb",
+    color: "#094d89",
     fontWeight: "600",
   },
 });

@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginHorizontal: 32,
     borderLeftWidth: 4,
-    borderLeftColor: "#2563eb",
+    borderLeftColor: "#094d89",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#2563eb",
+    color: "#094d89",
   },
   count: {
     fontSize: 16,

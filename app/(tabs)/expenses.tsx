@@ -267,7 +267,7 @@ const ExpensesScreen = memo(() => {
 
       {isSyncing && (
         <View style={styles.syncIndicator}>
-          <ActivityIndicator size="small" color="#2563eb" />
+          <ActivityIndicator size="small" color="#094d89" />
           <Text style={styles.syncText}>Syncing with server...</Text>
         </View>
       )}
@@ -295,8 +295,8 @@ const ExpensesScreen = memo(() => {
           <RefreshControl
             refreshing={isSyncing}
             onRefresh={handleRefresh}
-            tintColor="#2563eb"
-            colors={["#2563eb"]}
+            tintColor="#094d89"
+            colors={["#094d89"]}
           />
         }
         ListEmptyComponent={listEmptyComponent}
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   syncText: {
-    color: "#2563eb",
+    color: "#094d89",
     fontSize: 13,
     fontWeight: "500",
   },
@@ -472,12 +472,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#2563eb",
+    backgroundColor: "#094d89",
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 12,
     gap: 8,
-    shadowColor: "#2563eb",
+    shadowColor: "#094d89",
     shadowOffset: {
       width: 0,
       height: 4,

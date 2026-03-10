@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     minHeight: 72,
   },
   actionEdit: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#0c73a2",
   },
   actionDelete: {
     backgroundColor: "#dc2626",

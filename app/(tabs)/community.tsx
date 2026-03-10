@@ -115,7 +115,7 @@ const CommunityScreen = memo(() => {
   if (isLoading && posts.length === 0) {
     return (
       <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#094d89" />
         <Text style={styles.loadingText}>Loading posts...</Text>
       </View>
     );
@@ -136,8 +136,8 @@ const CommunityScreen = memo(() => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#2563eb"
-            colors={["#2563eb"]}
+            tintColor="#094d89"
+            colors={["#094d89"]}
           />
         }
         ListEmptyComponent={emptyComponent}
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#094d89",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",

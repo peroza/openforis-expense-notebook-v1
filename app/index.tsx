@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   expensesButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#094d89",
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: "center",
